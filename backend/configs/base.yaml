@@ -1,0 +1,18 @@
+pipeline_config:
+  # Configuration générale du pipeline
+  name: "base_rag_pipeline"
+  version: "1.0.0"
+  
+  # Paramètres par défaut
+  default_top_k: 5
+  default_rerank_top_k: 3
+  
+  # Options
+  enable_caching: true
+  enable_logging: true
+  log_level: "INFO"
+  
+  # Timeouts (en secondes)
+  embedding_timeout: 30
+  retrieval_timeout: 10
+  llm_timeout: 60

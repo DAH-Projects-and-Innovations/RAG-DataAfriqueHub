@@ -1,0 +1,66 @@
+# Modèle d'embedding (gratuit)
+embedder:
+  name: "sentence_transformers"
+  params:
+    model_name: "BAAI/bge-large-en-v1.5"
+    device: "cpu"
+    normalize_embeddings: true
+    batch_size: 32
+
+# Base de données vectorielle (gratuite, locale)
+vector_store:
+  name: "chroma"
+  params:
+    collection_name: "documents"
+    persist_directory: "./data/chroma_db"
+    distance_metric: "cosine"
+
+# Composant de récupération
+retriever:
+  name: "vector_retriever"
+  params:
+    search_type: "similarity"
+    score_threshold: 0.3
+    fetch_k: 20
+
+# Query Rewriting (payant, optionnel mais recommandé)
+query_rewriter:
+  name: "llm_rewriter"
+  params:
+    num_variations: 3
+    temperature: 0.8
+    # Utilise le LLM défini ci-dessous
+
+# Reranking (payant, très efficace)
+reranker:
+  name: "cohere"
+  params:
+    api_key: "${COHERE_API_KEY}"
+    model: "rerank-english-v3.0"  # ou "rerank-multilingual-v3.0"
+    top_n: 5
+
+# Modèle de génération (payant, excellent rapport qualité/prix)
+llm:
+  name: "openai"
+  params:
+    api_key: "${OPENAI_API_KEY}"
+    model: "gpt-4o-mini"  # Bon compromis coût/performance
+    temperature: 0.7
+    max_tokens: 1500
+    top_p: 0.95
+    frequency_penalty: 0.0
+    presence_penalty: 0.0
+
+# Configuration du pipeline
+pipeline_config:
+  name: "hybrid_rag_pipeline"
+  version: "1.0.0"
+  default_top_k: 10  # On récupère plus de docs pour le reranking
+  default_rerank_top_k: 5  # On garde les 5 meilleurs après reranking
+  enable_caching: true
+  log_level: "INFO"
+  
+  # Métriques estimées
+  estimated_cost_per_query: 0.02  # USD
+  expected_latency: 2  # secondes
+

@@ -1,0 +1,56 @@
+# Modèle d'embedding (gratuit)
+embedder:
+  name: "sentence_transformers"
+  params:
+    model_name: "BAAI/bge-large-en-v1.5"  # 1024 dimensions
+    device: "cpu"  # Utiliser "cuda" si GPU disponible
+    normalize_embeddings: true
+    batch_size: 32
+
+# Base de données vectorielle (gratuite, locale)
+vector_store:
+  name: "chroma"
+  params:
+    collection_name: "documents"
+    persist_directory: "./data/chroma_db"
+    # Paramètres ChromaDB
+    distance_metric: "cosine"  # ou "l2", "ip"
+
+# Composant de récupération
+retriever:
+  name: "vector_retriever"
+  params:
+    search_type: "similarity"  # ou "mmr" pour Maximum Marginal Relevance
+    score_threshold: 0.0  # Seuil de similarité minimum (0-1)
+    fetch_k: 20  # Nombre de documents à fetcher avant filtrage
+
+# Reranking (optionnel, gratuit)
+reranker:
+  name: "cross_encoder"
+  params:
+    model_name: "BAAI/bge-reranker-large"
+    device: "cpu"
+    batch_size: 16
+
+# Modèle de génération (gratuit, local via Ollama)
+llm:
+  name: "ollama"
+  params:
+    model: "llama3.1:8b"  # ou "llama3.1:70b" si ressources suffisantes
+    base_url: "http://localhost:11434"
+    temperature: 0.7
+    max_tokens: 1000
+    top_p: 0.9
+    # Paramètres additionnels Ollama
+    num_ctx: 4096  # Taille du contexte
+    repeat_penalty: 1.1
+
+# Configuration du pipeline
+pipeline_config:
+  name: "free_rag_pipeline"
+  version: "1.0.0"
+  default_top_k: 5
+  default_rerank_top_k: 3
+  enable_caching: true
+  log_level: "INFO"
+
