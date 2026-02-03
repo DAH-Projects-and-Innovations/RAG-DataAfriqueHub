@@ -1,98 +1,87 @@
 
-🚀 RAG-DataAfriqueHub Backend API
-Ce backend est le moteur de service pour le système RAG (Retrieval-Augmented Generation) de DataAfriqueHub. Il repose sur une architecture modulaire qui permet de configurer et d'interchanger dynamiquement les composants de traitement (LLM, Vector Store, Embeddings).
 
-🛠️ Installation et Démarrage
-1. Prérequis
-Python 3.9+
+## 1. Route : Ingestion de Document (`POST /ingest`)
 
-Un environnement virtuel (recommandé) :
+Cette route sert à "nourrir" le cerveau de l'IA avec de nouvelles connaissances.
 
-Bash
+### **Exemple d'Entrée (Request Body)**
 
-python -m venv venv
-source venv/bin/activate  # Sur Windows: venv\Scripts\activate
-2. Installation des dépendances
-Bash
+C'est ce que ton code attend dans `src/api/schemas.py`.
 
-pip install -r requirements.txt
-3. Lancer l'API de développement
-Bash
-
-uvicorn src.api.main:app --reload
-L'API sera disponible sur : http://127.0.0.1:8000
-
-📡 Documentation et Tests (Swagger)
-L'API intègre une documentation interactive permettant de tester les points d'entrée sans client externe : 👉 Lien local : http://127.0.0.1:8000/docs
-
-🧪 Exemples de Requêtes Standardisées
-🔹 1. Ingestion de Document (POST /ingest)
-Cette route permet d'envoyer un document pour qu'il soit traité par le pipeline de données.
-
-Corps de la requête (JSON) :
-
-JSON
-
+```json
 {
-  "source": "data/test_doc.txt",
+  "source": "data/afrique_hub_rapport.txt",
   "loader_name": "text_loader",
   "chunker_name": "overlap_chunker"
 }
-Réponse type (200 OK) :
 
-JSON
+```
 
+* **`source`** : Le chemin ou l'URL du document à lire.
+* **`loader_name`** : L'outil spécifique pour lire ce format (ici, notre `TextLoader`).
+* **`chunker_name`** : L'algorithme qui va découper le texte en morceaux (indispensable pour que l'IA ne sature pas).
+
+### **Exemple de Sortie (Response Body)**
+
+C'est ce que l'utilisateur reçoit si tout se passe bien.
+
+```json
 {
   "status": "success",
-  "message": "Document data/test_doc.txt ingéré avec succès"
+  "message": "Document data/afrique_hub_rapport.txt ingéré avec succès",
+  "task_id": "ingest_2026_02_03_12345"
 }
-🔹 2. Question / Réponse (POST /query)
-Interroge le moteur RAG sur la base des connaissances indexées.
 
-Corps de la requête (JSON) :
+```
 
-JSON
+---
 
+## 2. Route : Question / Réponse (`POST /query`)
+
+C'est la route "Star", celle qui simule le moteur RAG complet.
+
+### **Exemple d'Entrée (Request Body)**
+
+L'utilisateur pose sa question ici.
+
+```json
 {
-  "question": "Quelle est la mission de DataAfriqueHub ?",
+  "question": "Quelles sont les opportunités économiques en Afrique de l'Ouest ?",
   "top_k": 3,
   "streaming": false
 }
-Réponse type (200 OK) :
 
-JSON
+```
 
+* **`question`** : La requête en langage naturel.
+* **`top_k`** : On demande à l'API de chercher les **3 meilleurs documents** en base pour répondre.
+* **`streaming`** : Défini sur `false` pour recevoir la réponse d'un bloc (plus simple pour le test).
+
+### **Exemple de Sortie (Response Body)**
+
+Voici le JSON riche que ton API génère.
+
+```json
 {
-  "answer": "[STUB] Réponse du moteur RAG",
-  "sources": [],
+  "answer": "[STUB] Réponse RAG : L'Afrique de l'Ouest présente des opportunités majeures dans le secteur du numérique et de l'énergie solaire.",
+  "sources": [
+    {
+      "content": "...le secteur du numérique en Côte d'Ivoire connaît une croissance de 15%...",
+      "metadata": { "source": "rapport_eco_2025.txt", "page": 12 }
+    }
+  ],
   "metadata": {
-    "original_query": "Quelle est la mission de DataAfriqueHub ?",
+    "original_query": "Quelles sont les opportunités économiques en Afrique de l'Ouest ?",
     "steps": [
       { "step": "query_rewriting", "num_queries": 1 },
-      { "step": "retrieval", "num_docs": 0 },
-      { "step": "generation", "answer_length": 25 }
-    ]
-  }
+      { "step": "retrieval", "num_docs": 3 },
+      { "step": "generation", "answer_length": 112 }
+    ],
+    "top_k": 3
+  },
+  "timestamp": "2026-02-03T21:45:12.456Z"
 }
-🏗️ Structure de l'Architecture
-Le projet est divisé en trois couches distinctes pour assurer la flexibilité :
 
-Couche API (src/api/) : Gère les points d'entrée HTTP, la validation des données avec Pydantic et la sérialisation des réponses.
+```
 
-Le Noyau Central (src/core/) : Définit les interfaces (contrats) que chaque composant doit respecter et gère la Factory qui assemble le pipeline.
-
-La Couche d'Implémentation (src/implementations/) : Contient le code technique spécifique (actuellement configuré avec des stubs pour valider l'architecture).
-
-⚙️ Configuration du Pipeline
-L'orchestration de l'ensemble du système est pilotée par le fichier principal de configuration : 📄 configs/hybrid.yaml
-
-C'est dans ce fichier que vous définissez quel modèle d'IA utiliser, les seuils de recherche vectorielle et les paramètres de réécriture de requêtes.
-
-⚠️ Notes de Développement
-Le système est actuellement livré avec des implémentations simulées (Stubs). Pour activer les fonctions réelles :
-
-Éditez le fichier src/implementations/__init__.py.
-
-Remplacez les retours statiques par la logique métier réelle (ex: appels API OpenAI, requêtes ChromaDB).
-
-Les composants enregistrés via register_all_components() seront automatiquement injectés dans l'API.
+---
