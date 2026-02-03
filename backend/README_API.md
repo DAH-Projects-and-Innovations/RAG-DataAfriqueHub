@@ -1,6 +1,3 @@
-Compris ! J'ai retiré toute référence personnelle pour rendre le document totalement professionnel et neutre. J'ai remplacé "Nancy" par "le noyau central (Core)" ou "le moteur de pipeline".
-
-Voici le fichier README.md définitif, prêt à être exporté.
 
 🚀 RAG-DataAfriqueHub Backend API
 Ce backend est le moteur de service pour le système RAG (Retrieval-Augmented Generation) de DataAfriqueHub. Il repose sur une architecture modulaire qui permet de configurer et d'interchanger dynamiquement les composants de traitement (LLM, Vector Store, Embeddings).
