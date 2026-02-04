@@ -1,0 +1,33 @@
+Le RAG (Retrieval-Augmented Generation) est une technique combinant recherche d'information et génération de texte.
+def quick_start(config_path: str = 'configs/hybrid.yaml'):
+    """
+    Démarrage rapide avec configuration par défaut
+    
+    Args:
+        config_path: Chemin vers le fichier de configuration
+        
+    Returns:
+        Pipeline RAG prêt à l'emploi
+        
+    Example:
+        >>> pipeline = quick_start()
+        >>> response = pipeline.query("Test question")
+    """
+    try:
+        from .implementations import register_all_components
+        
+        # Enregistrer tous les composants
+        register_all_components()
+        
+        # Charger la configuration
+        config = RAGPipelineFactory.load_config(config_path)
+        
+        # Créer le pipeline
+        pipeline = RAGPipelineFactory.create_from_config(config)
+        
+        print(f"✅ Pipeline initialisé avec la configuration: {config_path}")
+        return pipeline
+        
+    except Exception as e:
+        print(f"❌ Erreur lors de l'initialisation: {e}")
+        raise
