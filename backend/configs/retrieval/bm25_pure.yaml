@@ -1,0 +1,40 @@
+# Configuration BM25 Pure
+# Recherche lexicale classique (pas d'embeddings requis)
+
+mode: "bm25"
+
+# Paramètres BM25
+bm25:
+  top_k: 10
+  k1: 1.2  # Saturation des termes (1.2-2.0)
+  b: 0.75  # Normalisation longueur (0.0-1.0)
+  min_score: 1.0  # Score minimum pour filtrer
+
+# Dense et Hybrid non utilisés en mode BM25
+dense:
+  top_k: 10
+  
+hybrid:
+  top_k: 10
+
+# Reranking désactivé
+reranking:
+  enabled: false
+
+# Filtres de métadonnées
+metadata_filters: {}
+
+# Description
+description: |
+  Configuration BM25 pure pour recherche lexicale.
+  - Ne nécessite pas d'embeddings (économique)
+  - Basé sur fréquence des termes et rareté
+  - Excellent pour recherche par mots-clés exacts
+  - Idéal pour: recherche par termes techniques, acronymes, noms propres
+
+# Performance attendue
+performance:
+  speed: "très rapide"
+  accuracy: "bonne pour mots-clés"
+  use_case: "recherche lexicale, termes techniques"
+  cost: "gratuit (pas d'API embeddings)"

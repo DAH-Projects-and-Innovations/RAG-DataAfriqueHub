@@ -1,0 +1,31 @@
+# Configuration Dense Retrieval (Simple)
+# Recherche vectorielle pure avec embeddings
+
+mode: "dense"
+
+# Paramètres Dense Retrieval
+dense:
+  top_k: 10
+  similarity_threshold: 0.7  # Filtrer les documents peu pertinents
+  normalize_scores: true
+
+# Reranking désactivé pour cette config simple
+reranking:
+  enabled: false
+
+# Filtres de métadonnées (exemples)
+metadata_filters: {}
+
+# Description
+description: |
+  Configuration de base pour retrieval dense.
+  - Recherche vectorielle pure basée sur similarité cosine
+  - Filtrage par seuil de similarité
+  - Pas de reranking (plus rapide)
+  - Idéal pour: corpus homogène, recherche sémantique
+
+# Performance attendue
+performance:
+  speed: "très rapide"
+  accuracy: "bonne"
+  use_case: "recherche sémantique générale"

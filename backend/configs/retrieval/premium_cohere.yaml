@@ -1,0 +1,56 @@
+# Configuration Premium avec Cohere Reranking
+# Meilleure qualité possible (nécessite API Cohere)
+
+mode: "hybrid"
+
+# Paramètres Dense Retrieval
+dense:
+  top_k: 50
+  similarity_threshold: null
+  normalize_scores: true
+
+# Paramètres BM25
+bm25:
+  top_k: 50
+  k1: 1.5
+  b: 0.75
+  min_score: 0.0
+
+# Paramètres Hybrid
+hybrid:
+  dense_weight: 0.6  # Favoriser légèrement la recherche sémantique
+  bm25_weight: 0.4
+  fusion_strategy: "weighted_sum"
+  top_k_per_retriever: 50
+  top_k: 50  # Large rappel avant reranking
+
+# Reranking Cohere (meilleure qualité)
+reranking:
+  enabled: true
+  type: "cohere"
+  model: "rerank-multilingual-v3.0"  # Support multilingue
+  top_k: 10  # Top-10 final après reranking
+  min_score: 0.6
+
+# Filtres de métadonnées
+metadata_filters: {}
+
+# Description
+description: |
+  Configuration premium avec Cohere Reranking.
+  - Large rappel (50 docs) de chaque retriever
+  - Fusion pondérée favorisant la sémantique
+  - Reranking Cohere pour qualité maximale
+  - Support multilingue natif
+  - Idéal pour: production, applications critiques
+
+# Performance attendue
+performance:
+  speed: "moyen"
+  accuracy: "excellente (meilleure disponible)"
+  use_case: "production, QA critique, multilingue"
+  cost: "moyen (API Cohere ~$1-2 / 1000 requêtes)"
+
+# Configuration requise
+requirements:
+  - "COHERE_API_KEY environment variable"
