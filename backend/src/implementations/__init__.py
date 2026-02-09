@@ -1,3 +1,4 @@
+from typing import List
 from src.core.factory import RAGPipelineFactory
 from src.core.interfaces import (
     IEmbedder, IVectorStore, ILLM, IDocumentLoader, 
@@ -8,20 +9,31 @@ from src.core.interfaces import (
 # 1. STUBS GÉNÉRIQUES (Acceptent tous les arguments)
 # ==========================================
 
+from src.core.models import Document
+
 class TextLoader(IDocumentLoader):
-    def load(self, source: str):
-        print(f"📖 [Stub] Chargement de : {source}")
-        return []
-    
-   
+    def __init__(self, **kwargs):
+        pass
+
+    def load(self, source: str) -> List[Document]:
+        with open(source, "r", encoding="utf-8") as f:
+            content = f.read()
+        return [Document(content=content, metadata={"source": source})]
+
     def get_supported_formats(self) -> list[str]:
         return [".txt", ".md"]
 
-class OverlapChunker(IChunker):
-    def chunk(self, documents: list) -> list:
-        print(f"✂️ [Stub] Découpage des documents...")
+class PDFLoader(IDocumentLoader):
+    def __init__(self, **kwargs):
+        pass
+
+    def load(self, source: str):
+        print(f"📄 [Stub] Chargement PDF : {source}")
+        # TODO: ici tu mettras ta vraie logique PDF (pypdf / pdfplumber)
         return []
 
+    def get_supported_formats(self) -> list[str]:
+        return [".pdf"]
 
 
 class MainEmbedder(IEmbedder):
@@ -32,11 +44,14 @@ class MainEmbedder(IEmbedder):
 
 class MainVectorStore(IVectorStore):
     def __init__(self, **kwargs): pass
-    def add_chunks(self, chunks, embeddings): return True
+    def add_chunks(self, chunks, embeddings=None, **kwargs):
+        # Stub: accepte les 2 modes (avec ou sans embeddings)
+        return True
     def search(self, query_embedding, top_k):
         return {"documents": [["Test"]], "metadatas": [[{"source": "doc.txt"}]], "distances": [[0.1]], "ids": [["1"]]}
     def delete_collection(self): return True
     def get_collection_stats(self): return {"count": 0}
+
 
 class MainRetriever(IRetriever):
     def __init__(self, **kwargs): pass
@@ -56,6 +71,20 @@ class MainLLM(ILLM):
     def generate(self, prompt, **kwargs): return "[STUB] Réponse"
     def get_token_count(self, text): return len(text.split())
 
+class OverlapChunker(IChunker):
+    """
+    Chunker minimal.
+    Découpe basique des documents.
+    À enrichir plus tard.
+    """
+
+    def __init__(self, **kwargs):
+        pass
+
+    def chunk(self, documents: List[str]) -> List[str]:
+        # Version minimale : retourne les documents tels quels
+        # (permet au pipeline de fonctionner sans erreur)
+        return documents
 # ==========================================
 # 2. ENREGISTREMENT
 # ==========================================
@@ -63,6 +92,7 @@ class MainLLM(ILLM):
 def register_all_components():
     f = RAGPipelineFactory
     f.register_component("loaders", "text_loader", TextLoader)
+    f.register_component("loaders", "pdf_loader", PDFLoader)
     f.register_component("chunkers", "overlap_chunker", OverlapChunker)
     f.register_component("embedders", "sentence_transformers", MainEmbedder)
     f.register_component("vector_stores", "chroma", MainVectorStore)
