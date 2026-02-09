@@ -1,0 +1,9 @@
+from ..core.factory import RAGPipelineFactory
+from .openai_llm import OpenAILLM
+from .ollama_llm import LocalLLM
+
+# Enregistrement automatique des composants LLM
+RAGPipelineFactory.register_component('llms', 'openai', OpenAILLM)
+RAGPipelineFactory.register_component('llms', 'local', LocalLLM)
+
+__all__ = ['OpenAILLM', 'LocalLLM']
