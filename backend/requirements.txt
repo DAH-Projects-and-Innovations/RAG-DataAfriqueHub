@@ -5,4 +5,4 @@ pypdf
 langdetect
 sentence-transformers
 faiss-cpu
-numpy
+numpygit 
