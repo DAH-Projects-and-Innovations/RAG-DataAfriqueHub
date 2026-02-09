@@ -1,0 +1,51 @@
+# Configuration Hybrid Retrieval avec Reranking
+# Combine BM25 + Dense + Cross-Encoder pour meilleure précision
+
+mode: "hybrid"
+
+# Paramètres Dense Retrieval
+dense:
+  top_k: 20
+  similarity_threshold: null  # Pas de filtrage dur
+  normalize_scores: true
+
+# Paramètres BM25
+bm25:
+  top_k: 20
+  k1: 1.5
+  b: 0.75
+  min_score: 0.0
+
+# Paramètres Hybrid
+hybrid:
+  dense_weight: 0.5
+  bm25_weight: 0.5
+  fusion_strategy: "rrf"  # Reciprocal Rank Fusion
+  rrf_k: 60
+  top_k_per_retriever: 20
+  top_k: 20  # Récupérer 20 avant reranking
+
+# Reranking activé
+reranking:
+  enabled: true
+  type: "cross-encoder"
+  model: "cross-encoder/ms-marco-MiniLM-L-6-v2"
+  top_k: 10  # Garder top-10 après reranking
+  min_score: 0.5  # Filtrer les documents peu pertinents
+
+# Filtres de métadonnées
+metadata_filters: {}
+
+# Description
+description: |
+  Configuration hybride avancée avec reranking.
+  - Fusion de recherche lexicale (BM25) et sémantique (dense)
+  - Reciprocal Rank Fusion pour combiner les résultats
+  - Cross-encoder pour réordonner finement les top-20
+  - Idéal pour: recherche précise, corpus hétérogène
+
+# Performance attendue
+performance:
+  speed: "moyen"
+  accuracy: "excellente"
+  use_case: "recherche de précision, QA"

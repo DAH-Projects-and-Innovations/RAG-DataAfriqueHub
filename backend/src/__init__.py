@@ -157,7 +157,7 @@ def _welcome_message():
     """Affiche un message de bienvenue"""
     print(f"""
 ╔═══════════════════════════════════════════════════════════╗
-║        Architecture RAG Modulaire v{__version__}              ║
+║        Architecture RAG Modulaire v{__version__}                  ║
 ║                                                           ║
 ║  Démarrage rapide:                                        ║
 ║    >>> from src import quick_start                        ║
