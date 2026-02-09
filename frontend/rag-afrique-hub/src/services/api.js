@@ -5,7 +5,14 @@ const API_BASE_URL = "http://localhost:8000"; // URL de FastAPI
 export const apiService = {
   // Correspond à RAGPipeline.query()
   askQuestion: async (text, history, config) => {
-    // On structure le payload selon les besoins de l'orchestrateur
+    // On crée une correspondance (mapping) entre le nom affiché et l'ID attendu par le backend
+     const modelMapping = {
+      "Gemini 1.5 Flash": "gemini-1.5-flash",
+      "GPT-4o-mini": "gpt-4o-mini",
+      "Ollama-Llama3": "ollama-llama3",
+      "Mistral-7B": "mistral-7b"
+    };
+    // structure le payload selon les besoins de l'orchestrateur
     const payload = {
       query_text: text,
       // passe l'historique pour le Query Rewriting 
@@ -14,7 +21,8 @@ export const apiService = {
       rerank_top_k: config.useReranker ? 3 : null,
       // Paramètres dynamiques pour l'orchestrateur
       llm_params: {
-        model: config.model === 'Gemini' ? 'gemini-1.5-flash' : 'gpt-4o-mini',
+        // On prend la valeur mappée, ou la valeur brute si non trouvée (pour éviter les erreurs si un nouveau modèle est ajouté sans mise à jour du mapping)
+        model: modelMapping[config.model] || config.model,
         temperature: 0.7
       }
     };
@@ -32,3 +40,24 @@ export const apiService = {
     return response.data;
   }
 };
+
+
+// une simulation de l'API pour le développement frontend sans backend opérationnel. À remplacer par les appels réels à FastAPI une fois que le backend est prêt.
+/*export const apiService = {
+  uploadFile: async (file) => {
+    // Simule une attente réseau de 1.5s
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    return { status: "success" };
+  },
+
+  askQuestion: async (text, history, config) => {
+    // Simule une attente de réflexion de l'IA de 2s
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    return {
+      answer: "Ceci est une réponse générée par le simulateur. Votre question était : " + text,
+      sources: [
+        { metadata: { filename: "doc_test.pdf" }, score: 0.85 }
+      ]
+    };
+  }
+};*/
