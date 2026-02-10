@@ -25,19 +25,19 @@
 
 ### ✅ Objectifs Complétés (11/11)
 
-| Objectif                                        | Statut         | Implémentation                                                                      |
-| :---------------------------------------------- | :------------- | :---------------------------------------------------------------------------------- |
-| **Abstraction LLM (open source + API)**         | ✅ **Terminé** | `OpenAILLM` (API Cloud) + `LocalLLM` (open source via llama-cpp-python + LangChain) |
-| **Installation libraire directe (sans Ollama)** | ✅ **Terminé** | `llama-cpp-python` permet exécution locale des modèles GGUF                         |
-| **Support multi-modèles**                       | ✅ **Terminé** | Mistral, Llama 3, Phi-3, Gemma 2 (via presets dans `download_model.py`)             |
-| **Gestion des prompts configurables**           | ✅ **Terminé** | Templates system/user injectables dans constructeurs + configs YAML                 |
-| **Sécurisation anti-hallucination**             | ✅ **Terminé** | Message de refus strict si information hors contexte                                |
-| **Réponses structurées avec sources**           | ✅ **Terminé** | `RAGResponse` avec `answer`, `sources[]`, `metadata`, `timestamp`                   |
-| **Tests unitaires**                             | ✅ **Terminé** | `src/test_llm.py` couvre `OpenAILLM` et `LocalLLM` (5/5 tests passent)              |
-| **LangChain intégration**                       | ✅ **Terminé** | `LlamaCpp`, `ChatOllama` (architecture modulaire)                                   |
-| **RAG avec citations détaillées**               | ✅ **Terminé** | `RAGPipeline._format_with_citations()` ajoute numéros et métadonnées                |
-| **Prompts versionnés**                          | ✅ **Terminé** | Champ `prompt_version` dans configs YAML                                            |
-| **Exemple end-to-end complet**                  | ✅ **Terminé** | `example_rag_complete.py` avec 4 exemples commentés                                 |
+| Objectif                                        | Statut         | Implémentation                                                          |
+| :---------------------------------------------- | :------------- | :---------------------------------------------------------------------- |
+| **Abstraction LLM (open source + API)**         | ✅ **Terminé** | `OpenAILLM` (API Cloud), `MistralLLM` (API Cloud), `LocalLLM` (Local)   |
+| **Installation libraire directe (sans Ollama)** | ✅ **Terminé** | `llama-cpp-python` permet exécution locale des modèles GGUF             |
+| **Support multi-modèles**                       | ✅ **Terminé** | Mistral, Llama 3, Phi-3, Gemma 2 (via presets dans `download_model.py`) |
+| **Gestion des prompts configurables**           | ✅ **Terminé** | Templates system/user injectables dans constructeurs + configs YAML     |
+| **Sécurisation anti-hallucination**             | ✅ **Terminé** | Message de refus strict si information hors contexte                    |
+| **Réponses structurées avec sources**           | ✅ **Terminé** | `RAGResponse` avec `answer`, `sources[]`, `metadata`, `timestamp`       |
+| **Tests unitaires**                             | ✅ **Terminé** | `src/test_llm.py`, `src/test_mistral.py` (8/8 tests passent)            |
+| **LangChain intégration**                       | ✅ **Terminé** | `LlamaCpp`, `ChatOllama` (architecture modulaire)                       |
+| **RAG avec citations détaillées**               | ✅ **Terminé** | `RAGPipeline._format_with_citations()` ajoute numéros et métadonnées    |
+| **Prompts versionnés**                          | ✅ **Terminé** | Champ `prompt_version` dans configs YAML                                |
+| **Exemple end-to-end complet**                  | ✅ **Terminé** | `example_rag_complete.py` avec 4 exemples commentés                     |
 
 ### 🎯 Résultat Final
 
@@ -181,6 +181,35 @@ from src.llm.openai_llm import OpenAILLM
 llm = OpenAILLM(
     api_key="sk-...",
     model_name="gpt-4o-mini",  # ou "gpt-4o", "gpt-4"
+    temperature=0.7,
+    system_prompt="...",
+    user_prompt_template="..."
+)
+```
+
+#### Méthodes
+
+Même interface que `LocalLLM` (principe d'abstraction).
+
+### 3.3 MistralLLM (Cloud API)
+
+**Fichier:** `src/llm/mistral_llm.py`
+
+#### Caractéristiques
+
+- ✅ Performance excellente (Mistral Large/Small)
+- ✅ Client compatible OpenAI
+- ✅ Alternative européenne souveraine
+- ❌ Nécessite clé API payante
+
+#### Initialisation
+
+```python
+from src.llm.mistral_llm import MistralLLM
+
+llm = MistralLLM(
+    api_key="...",
+    model_name="mistral-small-latest",
     temperature=0.7,
     system_prompt="...",
     user_prompt_template="..."
@@ -480,15 +509,18 @@ uv run python -m unittest src/test_llm.py -v
 **Résultat attendu:**
 
 ```
-test_local_generate ... ok
-test_local_llm_init ... ok
-test_openai_custom_prompt ... ok
-test_openai_generate ... ok
-test_openai_llm_init ... ok
+test_mistral_generate ... ok
+ test_mistral_generate_with_context ... ok
+ test_mistral_llm_init ... ok
+ test_local_generate ... ok
+ test_local_llm_init ... ok
+ test_openai_custom_prompt ... ok
+ test_openai_generate ... ok
+ test_openai_llm_init ... ok
 
-Ran 5 tests in 0.002s
+ Ran 8 tests in 0.005s
 
-OK ✅
+ OK ✅
 ```
 
 ### 8.2 Tests Couverts
@@ -519,15 +551,15 @@ uv run python example_rag_complete.py
 
 ### 9.1 Composants du Pipeline
 
-| Composant       | Rôle                                 | Implémentation          |
-| :-------------- | :----------------------------------- | :---------------------- |
-| **Loader**      | Charge les documents sources         | `PDFLoader`, etc.       |
-| **Chunker**     | Découpe en morceaux                  | `RecursiveChunker`      |
-| **Embedder**    | Convertit en vecteurs                | `SentenceTransformer`   |
-| **VectorStore** | Stocke et recherche vectorielle      | `ChromaDB`, `Pinecone`  |
-| **Retriever**   | Récupère documents pertinents        | `VectorRetriever`       |
-| **Reranker**    | Réordonne par pertinence (optionnel) | `CrossEncoder`          |
-| **LLM**         | Génère la réponse finale             | `LocalLLM`, `OpenAILLM` |
+| Composant       | Rôle                                 | Implémentation                        |
+| :-------------- | :----------------------------------- | :------------------------------------ |
+| **Loader**      | Charge les documents sources         | `PDFLoader`, etc.                     |
+| **Chunker**     | Découpe en morceaux                  | `RecursiveChunker`                    |
+| **Embedder**    | Convertit en vecteurs                | `SentenceTransformer`                 |
+| **VectorStore** | Stocke et recherche vectorielle      | `ChromaDB`, `Pinecone`                |
+| **Retriever**   | Récupère documents pertinents        | `VectorRetriever`                     |
+| **Reranker**    | Réordonne par pertinence (optionnel) | `CrossEncoder`                        |
+| **LLM**         | Génère la réponse finale             | `LocalLLM`, `OpenAILLM`, `MistralLLM` |
 
 ### 9.2 Flux de Données
 
@@ -634,7 +666,7 @@ Ce moteur RAG est **production-ready** avec:
 ✅ Sécurité anti-hallucination  
 ✅ Citations automatiques  
 ✅ Configuration flexible (YAML)  
-✅ Tests validés (5/5)  
+✅ Tests validés (8/8)  
 ✅ Documentation complète  
 ✅ Exemples fonctionnels
 
