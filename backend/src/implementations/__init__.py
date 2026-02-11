@@ -3,6 +3,8 @@ from src.core.interfaces import (
     IEmbedder, IVectorStore, ILLM, IDocumentLoader, 
     IChunker, IRetriever, IQueryRewriter, IReranker
 )
+from src.llm.mistral_llm import MistralLLM
+
 
 # ==========================================
 # 1. STUBS GÉNÉRIQUES (Acceptent tous les arguments)

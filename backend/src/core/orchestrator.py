@@ -194,12 +194,47 @@ class RAGPipeline:
             logger.error(f"Erreur lors de la génération: {e}")
             answer = f"Erreur lors de la génération de la réponse: {str(e)}"
         
+        # 6. Formatage avec citations (optionnel)
+        if kwargs.get('include_citations', False) and unique_docs:
+            answer = self._format_with_citations(answer, unique_docs)
+            metadata['citations_added'] = True
+        
         return RAGResponse(
             answer=answer,
             sources=unique_docs,
             metadata=metadata,
             query=query_text
         )
+    
+    def _format_with_citations(self, answer: str, sources: List[Document]) -> str:
+        """
+        Ajoute des citations numérotées à la fin de la réponse
+        
+        Args:
+            answer: Réponse générée
+            sources: Documents sources
+            
+        Returns:
+            Réponse avec citations formatées
+        """
+        if not sources:
+            return answer
+        
+        citations = "\n\n**Sources:**\n"
+        for i, doc in enumerate(sources, 1):
+            # Extrait les métadonnées pertinentes
+            source_info = doc.metadata.get('source', 'Source inconnue')
+            page = doc.metadata.get('page', '')
+            
+            citation = f"[{i}] {source_info}"
+            if page:
+                citation += f" (page {page})"
+            if doc.score:
+                citation += f" (score: {doc.score:.3f})"
+            
+            citations += f"{citation}\n"
+        
+        return answer + citations
     
     def get_stats(self) -> Dict[str, Any]:
         """Retourne les statistiques du pipeline"""
