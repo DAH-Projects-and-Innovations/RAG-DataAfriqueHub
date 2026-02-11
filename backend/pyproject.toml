@@ -13,4 +13,6 @@ dependencies = [
     "sentence-transformers>=5.2.2",
     "tqdm>=4.67.3",
     "uvicorn>=0.40.0",
+    "huggingface-hub>=1.4.1",
+    "mistral>=21.0.0",
 ]

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Python cache
 __pycache__/
 *.pyc
@@ -14,7 +13,7 @@ env/
 .DS_Store
 .idea/
 .vscode/
-=======
+*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -23,6 +22,22 @@ __pycache__/
 # Environments
 .env
 .venv
+
+# Environnements virtuels
+.venv/
+venv/
+env/
+ENV/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Modèles téléchargés (trop gros pour Git)
+models/
+*.gguf
 
 # Distribution / packaging
 .Python
@@ -60,4 +75,28 @@ coverage.xml
 .vscode/
 *.swp
 *.swo
->>>>>>> origin/abel
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environnement
+.env
+.env.local
+
+# Logs
+*.log
+
+# Bases de données
+*.db
+*.sqlite
+*.sqlite3
+
+# Données temporaires
+data/chroma_db/
+tmp/
+temp/
