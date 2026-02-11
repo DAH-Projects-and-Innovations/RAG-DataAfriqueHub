@@ -4,6 +4,13 @@ from src.core.interfaces import (
     IChunker, IRetriever, IQueryRewriter, IReranker
 )
 from src.llm.mistral_llm import MistralLLM
+from src.Loaders.text_loader import UnifiedDocumentLoader
+from src.retrieval.retrieval_strategy import RetrievalStrategy
+from src.Chunkers.basic_chunker import ConfigurableChunker
+from src.Embedders.dummy_embedder import LocalSentenceEmbedder
+from src.vectorstores.simple_store import FAISSVectorStore
+from src.retrieval.reranker import CohereReranker
+
 
 
 # ==========================================
@@ -64,13 +71,13 @@ class MainLLM(ILLM):
 
 def register_all_components():
     f = RAGPipelineFactory
-    f.register_component("loaders", "text_loader", TextLoader)
-    f.register_component("chunkers", "overlap_chunker", OverlapChunker)
-    f.register_component("embedders", "sentence_transformers", MainEmbedder)
-    f.register_component("vector_stores", "chroma", MainVectorStore)
-    f.register_component("retrievers", "vector_retriever", MainRetriever)
+    f.register_component("loaders", "text_loader", UnifiedDocumentLoader)
+    f.register_component("chunkers", "overlap_chunker", ConfigurableChunker)
+    f.register_component("embedders", "sentence_transformers", LocalSentenceEmbedder)
+    f.register_component("vector_stores", "chroma", FAISSVectorStore)
+    f.register_component("retrievers", "vector_retriever", RetrievalStrategy)
     f.register_component("query_rewriters", "llm_rewriter", MainRewriter)
-    f.register_component("rerankers", "cohere", MainReranker)
-    f.register_component("llms", "openai", MainLLM)
+    f.register_component("rerankers", "cohere", CohereReranker)
+    f.register_component("llms", "Mistral", MistralLLM)
 
     print("✅ [INFO] Branchement API validé.")

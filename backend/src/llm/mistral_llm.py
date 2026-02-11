@@ -30,7 +30,6 @@ class MistralLLM(ILLM):
         
         self.client = Mistral(api_key=self.api_key)
     
-        model = "mistral-medium-latest"
 
         
         
@@ -55,7 +54,7 @@ class MistralLLM(ILLM):
         Génère une réponse simple
         """
         try:
-            response = self.client.chat.completions.create(
+            response = self.client.chat.complete(
                 model=self.model_name,
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant."},
