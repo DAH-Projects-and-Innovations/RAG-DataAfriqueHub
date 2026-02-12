@@ -22,7 +22,7 @@ retriever:
   params:
     search_type: "similarity" # ou "mmr" pour Maximum Marginal Relevance
     score_threshold: 0.0 # Seuil de similarité minimum (0-1)
-    fetch_k: 20 # Nombre de documents à fetcher avant filtrage
+    top_k: 20 # Nombre de documents à fetcher avant filtrage
 
 # Reranking (optionnel, gratuit)
 reranker:

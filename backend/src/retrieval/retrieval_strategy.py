@@ -141,7 +141,8 @@ class RetrievalStrategy(IRetriever):
         vector_store: Optional[IVectorStore] = None,
         embedder: Optional[IEmbedder] = None,
         documents: Optional[List[Document]] = None,
-        config: Optional[RetrievalConfig] = None
+        config: Optional[RetrievalConfig] = None,
+        **kwargs  # Capture 'search_type', 'score_threshold', 'fetch_k', etc.
     ):
         """
         Initialise la stratégie de retrieval.
@@ -156,6 +157,18 @@ class RetrievalStrategy(IRetriever):
         self.embedder = embedder
         self.documents = documents or []
         self.config = config or RetrievalConfig()
+
+        # On mappe les arguments "flat" venant du YAML vers la structure RetrievalConfig
+        if 'search_type' in kwargs:
+            # Exemple: mapper 'similarity' vers le mode DENSE
+            if kwargs['search_type'] == 'similarity':
+                self.config.mode = RetrievalMode.DENSE
+        
+        if 'score_threshold' in kwargs:
+            self.config.dense_similarity_threshold = kwargs['score_threshold']
+            
+        if 'top_k' in kwargs:
+            self.config.dense_top_k = kwargs['top_k']
         
         # Composants (créés à la demande)
         self._dense_retriever = None

@@ -141,6 +141,7 @@ class RAGPipelineFactory:
         Returns:
             Instance du composant
         """
+        
         name = component_config['name']
         params = component_config.get('params', {})
         
@@ -153,6 +154,8 @@ class RAGPipelineFactory:
         
         component_class = cls._registry[component_type][name]
         logger.debug(f"Création du composant: {component_type}/{name}")
+
+        print(params)
         
         try:
             return component_class(**params)

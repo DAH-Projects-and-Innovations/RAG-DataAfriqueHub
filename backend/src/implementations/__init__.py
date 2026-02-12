@@ -9,7 +9,10 @@ from src.retrieval.retrieval_strategy import RetrievalStrategy
 from src.Chunkers.basic_chunker import ConfigurableChunker
 from src.Embedders.dummy_embedder import LocalSentenceEmbedder
 from src.vectorstores.simple_store import FAISSVectorStore
+from src.vectorstores.chroma_store import ChromaVectorStore
 from src.retrieval.reranker import CohereReranker
+
+from src.llm import OllamaLLM, LLMAdapter
 
 
 
@@ -74,10 +77,10 @@ def register_all_components():
     f.register_component("loaders", "text_loader", UnifiedDocumentLoader)
     f.register_component("chunkers", "overlap_chunker", ConfigurableChunker)
     f.register_component("embedders", "sentence_transformers", LocalSentenceEmbedder)
-    f.register_component("vector_stores", "chroma", FAISSVectorStore)
+    f.register_component("vector_stores", "chroma", ChromaVectorStore)
     f.register_component("retrievers", "vector_retriever", RetrievalStrategy)
     f.register_component("query_rewriters", "llm_rewriter", MainRewriter)
     f.register_component("rerankers", "cohere", CohereReranker)
-    f.register_component("llms", "Mistral", MistralLLM)
+    f.register_component("llms", "ollama", LLMAdapter)
 
     print("✅ [INFO] Branchement API validé.")
