@@ -11,6 +11,8 @@ from .interfaces import (
     IRetriever, IReranker, IQueryRewriter, ILLM
 )
 
+from src.llm.prompt_manager import PromptManager
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +28,8 @@ class RAGPipelineFactory:
         'query_rewriters': {},
         'llms': {},
         'loaders': {},
-        'chunkers': {}
+        'chunkers': {},
+        'prompt_managers': {}
     }
     
     @classmethod
@@ -103,8 +106,18 @@ class RAGPipelineFactory:
         # Création des composants obligatoires
         embedder = cls._create_component('embedders', config['embedder'])
         vector_store = cls._create_component('vector_stores', config['vector_store'])
+        config['retriever']['params']['vector_store'] = vector_store
+        config['retriever']['params']['embedder'] = embedder
         retriever = cls._create_component('retrievers', config['retriever'])
-        llm = cls._create_component('llms', config['llm'])
+
+        # 1. Créer le PromptManager d'abord
+        prompt_manager = cls._create_component('prompt_managers', config['prompt_manager'])
+        
+        # 2. Passer le prompt_manager aux params du LLM avant création
+        llm_config = config['llm']
+        llm_config['params']['prompt_manager'] = prompt_manager
+        llm_config['params']['provider'] = llm_config['name'] # ex: 'ollama'
+        llm = cls._create_component('llms', llm_config)
         
         # Création des composants optionnels
         query_rewriter = None
@@ -155,7 +168,7 @@ class RAGPipelineFactory:
         component_class = cls._registry[component_type][name]
         logger.debug(f"Création du composant: {component_type}/{name}")
 
-        print(params)
+        print(component_type, params)
         
         try:
             return component_class(**params)

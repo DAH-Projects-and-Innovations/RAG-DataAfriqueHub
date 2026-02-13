@@ -69,7 +69,7 @@ class DenseRetriever(IRetriever):
 
         # Appliquer les filtres de métadonnées si configuré
         search_filters = None
-        if self.config.include_metadata_filter and (filters or query.filters):
+        if self.config.include_metadata_filter and (filters or getattr(query, "filters", None)):
             search_filters = {**(filters or {}), **(query.filters or {})}
 
         # Recherche vectorielle

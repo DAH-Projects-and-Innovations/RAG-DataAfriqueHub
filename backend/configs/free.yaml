@@ -32,18 +32,42 @@ reranker:
     device: "cpu"
     batch_size: 16
 
-# Modèle de génération (gratuit, local via Ollama)
+# Gestionnaire de prompts
+prompt_manager:
+  name: "default"
+  params: {}
+
+# Modèle de génération (Ollama local)
+#llm:
+#  name: "ollama"  # Ce nom sera utilisé comme 'provider'
+#  params:
+#    model: "llama3.1:8b"
+#    base_url: "http://localhost:11434"
+#    temperature: 0.7
+#    max_tokens: 1000
+#    top_p: 0.9
+#    # Paramètres RAG
+#    enable_citations: false
+#    system_prompt_template: "rag_system"
+#    user_prompt_template: "rag_user"
+#    prevent_hallucinations: true
+#    # Paramètres additionnels Ollama
+#    num_ctx: 4096
+#    repeat_penalty: 1.1
+
 llm:
-  name: "ollama"
+  name: "mistral"  # Provider Mistral
   params:
-    model: "llama3.1:8b" # ou "llama3.1:70b" si ressources suffisantes
-    base_url: "http://localhost:11434"
+    model: "mistral-large-latest"  # ou "mistral-medium-latest", "mistral-small-latest"
+    api_key: "MISTRAL_API_KEY"  # Variable d'environnement
     temperature: 0.7
     max_tokens: 1000
     top_p: 0.9
-    # Paramètres additionnels Ollama
-    num_ctx: 4096 # Taille du contexte
-    repeat_penalty: 1.1
+    # Paramètres RAG
+    enable_citations: false
+    system_prompt_template: "rag_system"
+    user_prompt_template: "rag_user"
+    prevent_hallucinations: true
 
 # Configuration du pipeline
 pipeline_config:

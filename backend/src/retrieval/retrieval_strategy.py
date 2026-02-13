@@ -321,9 +321,10 @@ class RetrievalStrategy(IRetriever):
         all_filters = {**self.config.metadata_filters}
         if filters:
             all_filters.update(filters)
-        if query.filters:
-            all_filters.update(query.filters)
-        
+        fltrs = getattr(query, "filters", None)
+        if fltrs:
+            all_filters.update(fltrs)
+
         # Sélectionner le retriever selon le mode
         if self.config.mode == RetrievalMode.DENSE:
             retriever = self._get_dense_retriever()
@@ -333,20 +334,20 @@ class RetrievalStrategy(IRetriever):
             retriever = self._get_hybrid_retriever()
         else:
             raise ValueError(f"Unknown retrieval mode: {self.config.mode}")
-        
+        print(2)
         # Récupérer les documents
         documents = retriever.retrieve(
             query=query,
             top_k=top_k,
             filters=all_filters if all_filters else None
         )
-        
+        print(5)
         # Appliquer le reranking si activé
         if self.config.enable_reranking and documents:
             reranker = self._get_reranker()
             if reranker:
                 documents = reranker.rerank(query, documents, top_k=top_k)
-        
+
         return documents
     
     def update_config(self, config: RetrievalConfig) -> None:
