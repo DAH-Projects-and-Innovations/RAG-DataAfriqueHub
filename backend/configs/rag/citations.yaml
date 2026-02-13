@@ -1,0 +1,49 @@
+# Configuration RAG avec Citations
+# Pour réponses fiables et traçables
+
+# Mode de fonctionnement
+enable_citations: true
+require_sources: true
+prevent_hallucinations: true
+confidence_threshold: 0.6
+
+# Prompts
+system_prompt_template: "rag_citations_system"
+user_prompt_template: "rag_citations_user"
+
+# Génération
+default_temperature: 0.5  # Plus déterministe pour citations précises
+default_max_tokens: 500
+
+# Retrieval
+default_top_k: 5
+min_relevance_score: 0.5
+
+# Formatage
+citation_style: "numeric"
+include_source_metadata: true
+
+# Description
+description: |
+  Configuration RAG avec citations complètes.
+  - Citations obligatoires [1], [2], etc.
+  - Température basse (0.5) pour précision
+  - 5 sources maximum
+  - Métadonnées des sources incluses
+  - Idéal pour: Recherche, documentation, compliance
+
+# Cas d'usage
+use_cases:
+  - "Documentation technique"
+  - "Recherche académique"
+  - "Compliance et audit"
+  - "Support niveau 2-3"
+
+# Exemple de sortie attendu
+example_output: |
+  "Python est un langage de programmation [1] créé par Guido van Rossum en 1991 [2]. 
+  Il est connu pour sa syntaxe claire et sa lisibilité [1]."
+  
+  Sources:
+  [1] Introduction to Python (python.org)
+  [2] History of Python (wikipedia.org)

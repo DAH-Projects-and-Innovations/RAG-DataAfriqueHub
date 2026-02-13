@@ -1,0 +1,38 @@
+# Configuration RAG Simple
+# Pour réponses rapides sans citations
+
+# Mode de fonctionnement
+enable_citations: false
+require_sources: true
+prevent_hallucinations: true
+confidence_threshold: 0.5
+
+# Prompts
+system_prompt_template: "rag_system"
+user_prompt_template: "rag_user"
+
+# Génération
+default_temperature: 0.7
+default_max_tokens: 300
+
+# Retrieval
+default_top_k: 3
+min_relevance_score: 0.6
+
+# Formatage
+citation_style: "numeric"
+include_source_metadata: false
+
+# Description
+description: |
+  Configuration RAG simple pour réponses rapides.
+  - Pas de citations (plus rapide)
+  - Limite de 3 sources
+  - Réponses concises (300 tokens max)
+  - Idéal pour: FAQ, support basique
+
+# Cas d'usage
+use_cases:
+  - "FAQ automatisées"
+  - "Support client niveau 1"
+  - "Réponses rapides"

@@ -1,0 +1,73 @@
+# Requirements pour le Moteur RAG (Tâche 4)
+
+# Core dependencies
+pyyaml>=6.0
+dataclasses>=0.6  # Python 3.6 only, not needed for 3.7+
+
+# LLM Providers (installer selon besoin)
+
+# OpenAI
+openai>=1.0.0
+
+# Anthropic (Claude)
+anthropic>=0.18.0
+
+# Ollama (gratuit, local) - Recommandé pour développement
+ollama>=0.1.0
+
+# HuggingFace (open-source)
+transformers>=4.30.0
+torch>=2.0.0  # ou tensorflow
+
+# Retrieval (depuis Tâche 3)
+# Déjà installé si Tâche 3 complétée
+# sentence-transformers>=2.2.0
+# numpy>=1.21.0
+
+# Tests et développement
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Utilitaires
+tqdm>=4.65.0
+python-dateutil>=2.8.0
+
+
+# ============================================================================
+# INSTALLATION PAR PROVIDER
+# ============================================================================
+
+# Minimum (avec Ollama - GRATUIT, LOCAL)
+# pip install pyyaml ollama
+
+# OpenAI
+# pip install pyyaml openai
+
+# Anthropic
+# pip install pyyaml anthropic
+
+# HuggingFace
+# pip install pyyaml transformers torch
+
+# Tout installer
+# pip install pyyaml openai anthropic ollama transformers torch
+
+
+# ============================================================================
+# SETUP OLLAMA (gratuit, local)
+# ============================================================================
+
+# 1. Installer Ollama
+# https://ollama.ai/download
+
+# 2. Télécharger un modèle (exemples)
+# ollama pull llama2
+# ollama pull mistral
+# ollama pull phi
+
+# 3. Démarrer le serveur
+# ollama serve
+
+# 4. Utiliser dans Python
+# from src.llm import create_llm
+# llm = create_llm("ollama", "llama2")
