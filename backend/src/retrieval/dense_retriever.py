@@ -1,5 +1,6 @@
 """
 Dense Retriever - Récupération basée sur les embeddings vectoriels.
+Pass
 """
 
 from typing import List, Dict, Any, Optional
