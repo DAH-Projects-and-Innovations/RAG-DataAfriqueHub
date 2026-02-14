@@ -30,7 +30,7 @@ def download_model(model_key: str):
     """Télécharge un modèle GGUF depuis HuggingFace en utilisant un preset ou des arguments"""
     
     if model_key not in MODEL_PRESETS:
-        print(f"❌ Modèle inconnu dans les presets : {model_key}")
+        print(f"Modèle inconnu dans les presets : {model_key}")
         print(f"Options disponibles : {', '.join(MODEL_PRESETS.keys())}")
         return
 
@@ -50,12 +50,12 @@ def download_model(model_key: str):
             local_dir=MODELS_DIR,
             local_dir_use_symlinks=False
         )
-        print(f"✅ Modèle téléchargé avec succès : {file_path}")
-        print(f"\n💡 Configuration à utiliser :")
+        print(f"Modèle téléchargé avec succès : {file_path}")
+        print(f"\nConfiguration à utiliser :")
         print(f"model_path: models/{filename}")
         return file_path
     except Exception as e:
-        print(f"❌ Erreur lors du téléchargement : {e}")
+        print(f"Erreur lors du téléchargement : {e}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Télécharger des modèles GGUF pour le RAG")

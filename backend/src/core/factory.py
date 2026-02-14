@@ -167,8 +167,6 @@ class RAGPipelineFactory:
         
         component_class = cls._registry[component_type][name]
         logger.debug(f"Création du composant: {component_type}/{name}")
-
-        print(component_type, params)
         
         try:
             return component_class(**params)

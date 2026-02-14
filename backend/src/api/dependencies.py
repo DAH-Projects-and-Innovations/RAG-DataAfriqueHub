@@ -5,5 +5,5 @@ import functools
 @functools.lru_cache()
 def get_pipeline():
     register_all_components()
-    config = RAGPipelineFactory.load_config("configs/hybrid.yaml")
+    config = RAGPipelineFactory.load_config("configs/free.yaml")
     return RAGPipelineFactory.create_from_config(config)

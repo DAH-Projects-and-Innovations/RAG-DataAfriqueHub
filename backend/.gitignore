@@ -92,3 +92,5 @@ data/chroma_db/
 tmp/
 temp/
 
+# uv 
+uv.lock

@@ -3,7 +3,7 @@ from src.core.interfaces import (
     IEmbedder, IVectorStore, ILLM, IDocumentLoader, 
     IChunker, IRetriever, IQueryRewriter, IReranker
 )
-from src.llm.mistral_llm import MistralLLM
+
 from src.Loaders.text_loader import UnifiedDocumentLoader
 from src.retrieval.retrieval_strategy import RetrievalStrategy
 from src.Chunkers.basic_chunker import ConfigurableChunker

@@ -334,14 +334,14 @@ class RetrievalStrategy(IRetriever):
             retriever = self._get_hybrid_retriever()
         else:
             raise ValueError(f"Unknown retrieval mode: {self.config.mode}")
-        print(2)
+
         # Récupérer les documents
         documents = retriever.retrieve(
             query=query,
             top_k=top_k,
             filters=all_filters if all_filters else None
         )
-        print(5)
+
         # Appliquer le reranking si activé
         if self.config.enable_reranking and documents:
             reranker = self._get_reranker()
