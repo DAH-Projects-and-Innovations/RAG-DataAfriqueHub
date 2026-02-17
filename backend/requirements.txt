@@ -3,6 +3,12 @@ uvicorn
 python-multipart
 pypdf
 langdetect
+
+numpy==1.26.4
+scipy
+scikit-learn
+
+torch
 sentence-transformers
+transformers
 faiss-cpu
-numpygit 

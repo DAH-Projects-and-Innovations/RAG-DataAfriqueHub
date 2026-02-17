@@ -36,7 +36,7 @@ async def ingest_file(file: UploadFile = File(...)):
     temp_path = f"temp_{filename}"
     
     try:
-        with open(temp_path, "wb") as buffer:
+        with open(temp_path, "wb") as buffer: 
             shutil.copyfileobj(file.file, buffer)
 
         # Exécution du pipeline d'ingestion complet
