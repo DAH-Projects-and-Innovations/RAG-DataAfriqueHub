@@ -16,7 +16,7 @@ pipeline = RAGPipelineFactory.create_from_config(config)
 pipeline.ingest(
     loader=UnifiedDocumentLoader(),
     chunker=ConfigurableChunker(),
-    source="./data/documents"
+    source="./data/documents/attentionn_is_all_you_need.pdf"
 )
 
 # 4. Utiliser
