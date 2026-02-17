@@ -5,21 +5,23 @@ from pathlib import Path
 import shutil
 import uuid
 import json
+import os
 from typing import List, Dict, Any
 
 from src.api.schemas.request import IngestRequest
 from src.api.dependencies import get_pipeline
+# ON RE-IMPORTE LA FACTORY POUR CRÉER LES COMPOSANTS
 from src.core.factory import RAGPipelineFactory
 
 router = APIRouter(prefix="/ingest", tags=["Ingestion"])
 
-
 @router.post("")
 async def ingest_document(req: IngestRequest, pipeline=Depends(get_pipeline)):
     """
-    Ingestion d'un document via un chemin local ou une URL (1 document).
+    Ingestion via chemin local ou URL.
     """
     try:
+        # CRÉATION DES COMPOSANTS EXIGÉS PAR LE PIPELINE
         loader = RAGPipelineFactory._create_component("loaders", {
             "name": req.loader_name,
             "params": req.loader_params
@@ -29,48 +31,48 @@ async def ingest_document(req: IngestRequest, pipeline=Depends(get_pipeline)):
             "params": req.chunker_params
         })
 
+        # APPEL AVEC LES OBJETS CRÉÉS
         count = pipeline.ingest(loader=loader, chunker=chunker, source=req.source)
         return {"status": "success", "chunks_ingested": int(count)}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Erreur : {str(e)}")
 
 
 @router.post("/upload")
 async def ingest_uploaded_pdfs(
-    files: List[UploadFile] = File(..., description="Upload one or more PDF files"),
+    files: List[UploadFile] = File(..., description="Upload un ou plusieurs fichiers PDF"),
     loader_name: str = Form("pdf_loader"),
     chunker_name: str = Form("overlap_chunker"),
-    loader_params: str = Form("{}"),     # JSON string
-    chunker_params: str = Form("{}"),    # JSON string
+    loader_params: str = Form("{}"), 
+    chunker_params: str = Form("{}"),
     pipeline=Depends(get_pipeline),
 ):
     """
-    Upload de plusieurs PDF (multipart/form-data), sauvegarde sur disque, puis ingestion.
+    Upload de plusieurs PDF, sauvegarde, puis ingestion.
     """
     try:
         if not files:
-            raise HTTPException(status_code=400, detail="No files uploaded.")
+            raise HTTPException(status_code=400, detail="Aucun fichier envoyé.")
 
-        # Parse params JSON -> dict
+        # 1. Conversion des paramètres
         try:
-            loader_params_dict: Dict[str, Any] = json.loads(loader_params) if loader_params else {}
-            chunker_params_dict: Dict[str, Any] = json.loads(chunker_params) if chunker_params else {}
+            l_params = json.loads(loader_params) if loader_params else {}
+            c_params = json.loads(chunker_params) if chunker_params else {}
         except json.JSONDecodeError:
-            raise HTTPException(
-                status_code=400,
-                detail="loader_params and chunker_params must be valid JSON strings."
-            )
+            raise HTTPException(status_code=400, detail="JSON invalide.")
 
+        # 2. Création des COMPOSANTS (Loader & Chunker) requis par pipeline.ingest
         loader = RAGPipelineFactory._create_component("loaders", {
             "name": loader_name,
-            "params": loader_params_dict
+            "params": l_params
         })
         chunker = RAGPipelineFactory._create_component("chunkers", {
             "name": chunker_name,
-            "params": chunker_params_dict
+            "params": c_params
         })
 
+        # 3. Dossier temporaire
         upload_dir = Path("data/uploads") / str(uuid.uuid4())
         upload_dir.mkdir(parents=True, exist_ok=True)
 
@@ -78,30 +80,36 @@ async def ingest_uploaded_pdfs(
         details = []
 
         for f in files:
-            # Validation simple du PDF
-            if not (f.filename or "").lower().endswith(".pdf"):
-                raise HTTPException(status_code=400, detail=f"'{f.filename}' is not a PDF.")
+            if not f.filename.lower().endswith(".pdf"):
+                continue
 
-            safe_name = f"{uuid.uuid4()}_{Path(f.filename).name}"
-            out_path = upload_dir / safe_name
+            safe_name = f"{uuid.uuid4()}_{f.filename}"
+            file_path = upload_dir / safe_name
 
-            with out_path.open("wb") as buffer:
-                shutil.copyfileobj(f.file, buffer)
+            # Sauvegarde
+            try:
+                with file_path.open("wb") as buffer:
+                    shutil.copyfileobj(f.file, buffer)
+            finally:
+                await f.close()
 
-            chunks = pipeline.ingest(loader=loader, chunker=chunker, source=str(out_path))
-            chunks = int(chunks)
-
-            total_chunks += chunks
-            details.append({"filename": f.filename, "chunks_ingested": chunks})
+            # 4. Ingestion avec les arguments positionnels loader et chunker
+            chunks = pipeline.ingest(
+                loader=loader, 
+                chunker=chunker, 
+                source=str(file_path)
+            )
+            
+            chunks_count = int(chunks)
+            total_chunks += chunks_count
+            details.append({"filename": f.filename, "chunks_ingested": chunks_count})
 
         return {
             "status": "success",
-            "documents": len(details),
+            "documents_processed": len(details),
             "chunks_ingested_total": total_chunks,
             "details": details,
         }
 
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
