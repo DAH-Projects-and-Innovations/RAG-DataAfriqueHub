@@ -29,7 +29,6 @@ class UnifiedDocumentLoader(IDocumentLoader):
             elif ext in ['md', 'txt']:
                 with open(source, 'r', encoding='utf-8') as f:
                     content = f.read()
-            raise ValueError(f"Format .{ext} non supporté.")
 
             if content.strip():
                 try: lang = detect(content[:1000])

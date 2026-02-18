@@ -1,0 +1,33 @@
+# 🔹 Fichiers d'environnement
+.env
+.env.local
+.env.*.local
+
+# 🔹 Dossier de l'environnement virtuel Python
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# 🔹 Fichiers Python compilés
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 🔹 Fichiers de configuration IDE / éditeur
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# 🔹 Fichiers système
+.DS_Store
+Thumbs.db
+
+# 🔹 Logs
+*.log
+
+# 🔹 Autres fichiers temporaires
+*.sqlite3
+*.db
