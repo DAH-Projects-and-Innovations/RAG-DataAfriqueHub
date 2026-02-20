@@ -1,0 +1,240 @@
+[33mcommit 4d2a3841da3846e692708bfc0e6a84d6f098164b[m[33m ([m[1;36mHEAD -> [m[1;32mdevelopment[m[33m)[m
+Merge: ba5c683 444f9ac
+Author: abel2319 <kpohinto.abel@gmail.com>
+Date:   Fri Feb 20 03:44:42 2026 +0100
+
+    Merge branch 'development' of https://github.com/abel2319/RAG-DataAfriqueHub into development
+
+[33mcommit 444f9ac75a75d14dcfa3c419956fa2a58b01024b[m[33m ([m[1;31morigin/development[m[33m)[m
+Author: Steph <yvesya1999@gmail.com>
+Date:   Tue Feb 17 22:57:20 2026 +0000
+
+    C
+    Revert "mise a jour de text_loarder.py"
+    This reverts commit 9efdf118aeef0b9beb5e47a12969639c30c966f5.
+
+[33mcommit ba5c683a39ace3622fa20f168564ffaa53473d88[m
+Author: abel2319 <kpohinto.abel@gmail.com>
+Date:   Tue Feb 17 23:22:43 2026 +0100
+
+    before lucas
+
+[33mcommit 9efdf118aeef0b9beb5e47a12969639c30c966f5[m
+Author: Steph <yvesya1999@gmail.com>
+Date:   Tue Feb 17 22:16:14 2026 +0000
+
+    mise a jour de text_loarder.py
+
+[33mcommit 618b08fdecdfadca6b0c2f833b7d6e2d0d2d53ba[m
+Author: abel2319 <kpohinto.abel@gmail.com>
+Date:   Sat Feb 14 16:02:51 2026 +0100
+
+    fix: fix somes files
+
+[33mcommit 837dfbb846867901fa35eb5a8c7182f695a2e828[m
+Author: abel2319 <kpohinto.abel@gmail.com>
+Date:   Fri Feb 13 12:39:30 2026 +0100
+
+    add
+
+[33mcommit 5567e2f05c4edff30920ea8bb3eb3cd42ccdba22[m
+Author: abel2319 <kpohinto.abel@gmail.com>
+Date:   Fri Feb 13 12:36:23 2026 +0100
+
+    add
+
+[33mcommit 9ec323dfe54c666af992ab1cb75542ca499a0a86[m
+Author: abel2319 <kpohinto.abel@gmail.com>
+Date:   Fri Feb 13 12:27:40 2026 +0100
+
+    fix: bug fixes to launch the rag locally without the API for now
+
+[33mcommit 4fdfae14a9fd4bee54ce448524a9eecdf25b86a8[m
+Author: abel2319 <kpohinto.abel@gmail.com>
+Date:   Thu Feb 12 10:46:39 2026 +0100
+
+    before fix llm in factory
+
+[33mcommit deb8263fb4b66ec2244d46b97748366d2087ab29[m
+Merge: b595f57 387c24b
+Author: cycydob <nancydobe3@gmail.com>
+Date:   Wed Feb 11 23:05:39 2026 +0000
+
+    lastest
+
+[33mcommit b595f577201c52239a713c03ecbdc42f1d071b4d[m
+Merge: dae35e7 7e81efc
+Author: cycydob <nancydobe3@gmail.com>
+Date:   Wed Feb 11 22:21:44 2026 +0000
+
+    before merge Yves
+
+[33mcommit dae35e7f32123aa046d432c36c4093e5a44ad04e[m
+Author: cycydob <nancydobe3@gmail.com>
+Date:   Wed Feb 11 21:47:55 2026 +0000
+
+    modification
+
+[33mcommit 7e81efca1d0a5aee512ee9d96cba46ecf5e20161[m
+Merge: 798e327 762ce44
+Author: abel2319 <kpohinto.abel@gmail.com>
+Date:   Wed Feb 11 22:45:38 2026 +0100
+
+    feat: merge thierry
+
+[33mcommit 762ce44d6bd17457bef602663e19a1fd936f3373[m[33m ([m[1;31morigin/thierry-ndri[m[33m)[m
+Author: thiers225 <thierry.ndri225@gmail.com>
+Date:   Tue Feb 10 22:55:08 2026 +0000
+
+    Ajout du model mistral
+
+[33mcommit 798e327cbd2f4d674a08aa4a0cfab72f5e171074[m
+Author: abel2319 <kpohinto.abel@gmail.com>
+Date:   Tue Feb 10 23:08:30 2026 +0100
+
+    pyproject
+
+[33mcommit 623125764569c24615b36bc0ac8cec666b7dbb62[m
+Author: thiers225 <thierry.ndri225@gmail.com>
+Date:   Mon Feb 9 16:52:19 2026 +0000
+
+    Moteur RAG - LocalLLM + OpenAILLM + Citations + Tests
+
+[33mcommit 387c24b48dd8970758d454308b4b168b55606583[m
+Author: Steph <yvesya1999@gmail.com>
+Date:   Mon Feb 9 12:33:54 2026 +0000
+
+    ajout du code pour la tache 2
+
+[33mcommit 256e51a7c29db6bc6fe7a103764d46e5f7cbcc46[m
+Author: Steph <yvesya1999@gmail.com>
+Date:   Mon Feb 9 12:07:16 2026 +0000
+
+    Ajout du code pour l'injection
+
+[33mcommit b005b400d120cb6f98ffc7a27f25751b1951cefa[m
+Merge: 2c27f90 4c49592
+Author: cycydob <nancydobe3@gmail.com>
+Date:   Mon Feb 9 08:25:17 2026 +0000
+
+    Merge remote-tracking branch 'origin/abel' into development
+
+[33mcommit 2c27f90e11e5c7f4b228ae65c0bfbef7589b252f[m
+Merge: 2a384e7 0947379
+Author: cycydob <nancydobe3@gmail.com>
+Date:   Mon Feb 9 08:02:40 2026 +0000
+
+    Merge remote-tracking branch 'origin/lucas-hnl' into development
+
+[33mcommit 2a384e79dfcb6615e47c47e234dc107eb27d8e52[m
+Merge: 65f0f41 2f3eb00
+Author: cycydob <nancydobe3@gmail.com>
+Date:   Mon Feb 9 07:48:08 2026 +0000
+
+    Merge remote-tracking branch 'origin/gaston_front' into development
+
+[33mcommit 4c49592a64aae3bc76a969e3f1fc590fc6879b80[m[33m ([m[1;31morigin/abel[m[33m)[m
+Author: abel2319 <kpohinto.abel@gmail.com>
+Date:   Sun Feb 8 23:17:57 2026 +0100
+
+    feat: task3
+
+[33mcommit 8ef096d59ad1c63d58d7a45fdf6fcc7bb533c934[m
+Author: abel2319 <kpohinto.abel@gmail.com>
+Date:   Sun Feb 8 23:08:35 2026 +0100
+
+    feat: task3
+
+[33mcommit 0947379589f13d5d92615dcdf2a778931ea83289[m
+Author: Hounna Lucas <nounagnonhl@gmail.com>
+Date:   Sun Feb 8 13:40:41 2026 +0100
+
+    Sync local tree to match branch state
+
+[33mcommit 55b906a9c643accc49ba0d2db7930d462c279843[m
+Author: Hounna Lucas <nounagnonhl@gmail.com>
+Date:   Sun Feb 8 13:25:00 2026 +0100
+
+    Add core RAG pipeline components
+
+[33mcommit 2f3eb009a52b8cf2186b80d9802a6186076d3725[m[33m ([m[1;32mgaston_front[m[33m)[m
+Author: Gastondah <gastondahsounton@gmail.com>
+Date:   Thu Feb 5 17:37:44 2026 +0100
+
+    feat: amélioration upload des docs, gestion des modèles dynamiques et bandeau d'erreur
+
+[33mcommit 65f0f41cc3bdf9fe8132197e6e2b721b637eedcf[m
+Merge: a8609aa a1a5706
+Author: cycydob <nancydobe3@gmail.com>
+Date:   Wed Feb 4 21:26:07 2026 +0000
+
+    Merge remote-tracking branch 'origin/lucas-hnl' into development
+
+[33mcommit a8609aa12b2ed319eab085205fb3adc6f0cdecf8[m
+Merge: eb9000e 5ef573b
+Author: cycydob <nancydobe3@gmail.com>
+Date:   Wed Feb 4 21:05:52 2026 +0000
+
+    Merge remote-tracking branch 'origin/gaston_front' into development
+
+[33mcommit a1a57069bbba1abfb71fe82d8d70989220479732[m
+Author: HounnaLucas <129276016+HounnaLucas@users.noreply.github.com>
+Date:   Tue Feb 3 22:49:35 2026 +0100
+
+    Update README_API.md
+
+[33mcommit d94b8bdb36157095bbad785b86f5342149f603be[m
+Author: Hounna Lucas <nounagnonhl@gmail.com>
+Date:   Tue Feb 3 21:53:27 2026 +0100
+
+    Remove unnecessary files
+
+[33mcommit 47ac5a46ff9248acb5d40142fc172f54d38ffbc0[m
+Author: HounnaLucas <129276016+HounnaLucas@users.noreply.github.com>
+Date:   Tue Feb 3 21:46:59 2026 +0100
+
+    Update README_API.md
+
+[33mcommit fb8cf18ec4755a9c3db50927212637419ec20301[m
+Author: Hounna Lucas <nounagnonhl@gmail.com>
+Date:   Tue Feb 3 21:41:03 2026 +0100
+
+    Add backend API source files
+
+[33mcommit d2081db7695622a0447ccf57161634ffdfdced06[m
+Author: Hounna Lucas <nounagnonhl@gmail.com>
+Date:   Sun Feb 1 00:47:45 2026 +0100
+
+    Ajout du fichier rag_api.py et un template implémentations
+
+[33mcommit 5ef573b33cd59bec7a63ce9f6ece51de5a701f5d[m
+Author: Gastondah <gastondahsounton@gmail.com>
+Date:   Fri Jan 30 13:22:45 2026 +0100
+
+    Ajout de la partie front
+
+[33mcommit c82aa9c5c78664b5f0bae947906f98fed4ff04fa[m[33m ([m[1;31morigin/lucashnl[m[33m)[m
+Author: Hounna Lucas <nounagnonhl@gmail.com>
+Date:   Tue Jan 27 15:31:32 2026 +0100
+
+    Add template
+
+[33mcommit eb9000e78cc8f5580d70ae17cadee9cf2805ec57[m[33m ([m[1;32mNancy-Dobé[m[33m, [m[1;32mAbel[m[33m)[m
+Author: Nancy Dobé <95131331+cycydob@users.noreply.github.com>
+Date:   Mon Jan 26 18:06:42 2026 +0000
+
+    Add architecture documentation for RAG modular task
+    
+    Added detailed architecture documentation for RAG modular task, including objectives, deliverables, structure, usage, configurations, extensibility, key points, and next steps.
+
+[33mcommit cd950e66314bb369832f749a8357633d29c559a8[m
+Author: cycydob <nancydobe3@gmail.com>
+Date:   Fri Jan 23 08:38:01 2026 +0000
+
+    feat(tache-1): Architecture RAG modulaire et configurable
+
+[33mcommit e5a89aa83e4b7f06d95f8712db1331ba92deb8c2[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Author: Steph <yvesya1999@gmail.com>
+Date:   Thu Jan 15 21:09:10 2026 +0000
+
+    initialisation du backend avec uv
