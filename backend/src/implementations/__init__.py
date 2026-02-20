@@ -1,3 +1,4 @@
+from typing import List
 from src.core.factory import RAGPipelineFactory
 from src.core.interfaces import (
     IEmbedder, IVectorStore, ILLM, IDocumentLoader, 
