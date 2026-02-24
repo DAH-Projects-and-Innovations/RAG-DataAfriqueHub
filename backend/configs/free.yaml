@@ -33,7 +33,7 @@ reranker:
     batch_size: 16
 
 # Gestionnaire de prompts
-prompt_manager:
+prompt_managers:
   name: "default"
   params: {}
 

@@ -111,11 +111,11 @@ class RAGPipelineFactory:
         retriever = cls._create_component('retrievers', config['retriever'])
 
         # 1. Créer le PromptManager d'abord
-        prompt_manager = cls._create_component('prompt_managers', config['prompt_manager'])
+        prompt_manager = cls._create_component('prompt_managers', config['prompt_managers'])
         
         # 2. Passer le prompt_manager aux params du LLM avant création
         llm_config = config['llm']
-        llm_config['params']['prompt_manager'] = prompt_manager
+        llm_config['params']['prompt_managers'] = prompt_manager
         llm_config['params']['provider'] = llm_config['name'] # ex: 'ollama'
         llm = cls._create_component('llms', llm_config)
         

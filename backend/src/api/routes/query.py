@@ -13,8 +13,8 @@ async def ask_question(req: QueryRequest, pipeline = Depends(get_pipeline)):
             top_k=req.top_k,
             rerank_top_k=req.rerank_top_k
         )
-        
-        # On ignore l'option streaming 
+
+        # On ignore l'option streaming
         # On renvoie un dictionnaire structuré
         return {
             "answer": response.answer,
