@@ -174,9 +174,16 @@ class RAGPipeline:
         if self.reranker and unique_docs:
             try:
                 rerank_k = rerank_top_k or top_k
+                #unique_docs = self.reranker.rerank(
+                #    query_text, 
+                #    unique_docs, 
+                #    top_k=rerank_k,
+                #    **kwargs.get('reranker_params', {})
+                #)
+                query_obj = Query(text=query_text)
                 unique_docs = self.reranker.rerank(
-                    query_text, 
-                    unique_docs, 
+                    query_obj,
+                    unique_docs,
                     top_k=rerank_k,
                     **kwargs.get('reranker_params', {})
                 )

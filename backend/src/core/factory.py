@@ -115,7 +115,7 @@ class RAGPipelineFactory:
         
         # 2. Passer le prompt_manager aux params du LLM avant création
         llm_config = config['llm']
-        llm_config['params']['prompt_managers'] = prompt_manager
+        llm_config['params']['prompt_manager'] = prompt_manager
         llm_config['params']['provider'] = llm_config['name'] # ex: 'ollama'
         llm = cls._create_component('llms', llm_config)
         
