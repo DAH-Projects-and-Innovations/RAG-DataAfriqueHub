@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
     register_all_components()
     
     # 2. Chargement de la config et création du pipeline
-    config = RAGPipelineFactory.load_config('configs/hybrid.yaml')
+    config = RAGPipelineFactory.load_config('configs/free.yaml')
     pipeline_instance = RAGPipelineFactory.create_from_config(config)
     
     # 3. Stockage dans l'état global de l'app

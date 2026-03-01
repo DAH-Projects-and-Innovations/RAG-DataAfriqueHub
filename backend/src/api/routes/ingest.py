@@ -94,14 +94,14 @@ async def ingest_uploaded_pdfs(
                 await f.close()
 
             # 4. Ingestion avec les arguments positionnels loader et chunker
-            chunks = pipeline.ingest(
-                loader=loader, 
-                chunker=chunker, 
-                source=str(file_path)
-            )
+            #chunks = pipeline.ingest(
+            #    loader=loader, 
+            #    chunker=chunker, 
+            #    source=str(file_path)
+            #)
             
-            chunks_count = int(chunks)
-            total_chunks += chunks_count
+            chunks_count = 0 w #int(chunks)
+            #total_chunks += chunks_count
             details.append({"filename": f.filename, "chunks_ingested": chunks_count})
 
         return {
