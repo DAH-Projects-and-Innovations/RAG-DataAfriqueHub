@@ -12,6 +12,7 @@ class IngestRequest(BaseModel):
 
 class QueryRequest(BaseModel):
     question: str = Field(..., description="La question de l'utilisateur")
+    chat_history: Optional[list] = Field(default_factory=list, description="Historique de la conversation")
     top_k: int = Field(default=5)
     rerank_top_k: Optional[int] = Field(default=None)
-    streaming: bool = Field(default=False)
+    llm_params: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Paramètres optionnels pour le LLM")

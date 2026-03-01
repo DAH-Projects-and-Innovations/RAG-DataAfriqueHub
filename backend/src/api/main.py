@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, Request
+from fastapi.middleware.cors import CORSMiddleware
 from src.api.routes import query, ingest
 from src.api.dependencies import get_pipeline
 from contextlib import asynccontextmanager
@@ -29,6 +30,20 @@ app = FastAPI(
     title="Modular RAG API", 
     version="1.0.0",
     lifespan=lifespan 
+)
+
+# CORS (à ajuster selon les besoins)
+origins = [
+    "http://localhost",
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(query.router)

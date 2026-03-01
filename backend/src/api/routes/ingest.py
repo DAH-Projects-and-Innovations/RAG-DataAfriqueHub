@@ -8,6 +8,8 @@ import json
 import os
 from typing import List, Dict, Any
 
+from src.Chunkers.basic_chunker import ConfigurableChunker
+from src.Loaders.text_loader import UnifiedDocumentLoader
 from src.api.schemas.request import IngestRequest
 from src.api.dependencies import get_pipeline
 # ON RE-IMPORTE LA FACTORY POUR CRÉER LES COMPOSANTS
@@ -15,7 +17,7 @@ from src.core.factory import RAGPipelineFactory
 
 router = APIRouter(prefix="/ingest", tags=["Ingestion"])
 
-@router.post("")
+@router.post("/old")
 async def ingest_document(req: IngestRequest, pipeline=Depends(get_pipeline)):
     """
     Ingestion via chemin local ou URL.
@@ -39,7 +41,7 @@ async def ingest_document(req: IngestRequest, pipeline=Depends(get_pipeline)):
         raise HTTPException(status_code=500, detail=f"Erreur : {str(e)}")
 
 
-@router.post("/upload")
+@router.post("")
 async def ingest_uploaded_pdfs(
     files: List[UploadFile] = File(..., description="Upload un ou plusieurs fichiers PDF"),
     loader_name: str = Form("pdf_loader"),
@@ -62,16 +64,9 @@ async def ingest_uploaded_pdfs(
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="JSON invalide.")
 
+        print(f"Loader: {loader_name} with params {l_params}")
         # 2. Création des COMPOSANTS (Loader & Chunker) requis par pipeline.ingest
-        loader = RAGPipelineFactory._create_component("loaders", {
-            "name": loader_name,
-            "params": l_params
-        })
-        chunker = RAGPipelineFactory._create_component("chunkers", {
-            "name": chunker_name,
-            "params": c_params
-        })
-
+        
         # 3. Dossier temporaire
         upload_dir = Path("data/uploads") / str(uuid.uuid4())
         upload_dir.mkdir(parents=True, exist_ok=True)
@@ -94,14 +89,14 @@ async def ingest_uploaded_pdfs(
                 await f.close()
 
             # 4. Ingestion avec les arguments positionnels loader et chunker
-            #chunks = pipeline.ingest(
-            #    loader=loader, 
-            #    chunker=chunker, 
-            #    source=str(file_path)
-            #)
+            chunks = pipeline.ingest(
+                loader=UnifiedDocumentLoader(),
+                chunker=ConfigurableChunker(),
+                source=str(file_path)
+            )
             
-            chunks_count = 0 w #int(chunks)
-            #total_chunks += chunks_count
+            chunks_count = int(chunks) if isinstance(chunks, str) else chunks
+            total_chunks += chunks_count
             details.append({"filename": f.filename, "chunks_ingested": chunks_count})
 
         return {
@@ -112,4 +107,5 @@ async def ingest_uploaded_pdfs(
         }
 
     except Exception as e:
+        print(f"Erreur lors de l'ingestion : {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

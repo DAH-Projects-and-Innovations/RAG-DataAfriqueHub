@@ -61,7 +61,7 @@ function App() {
 
   // LOGIQUE CHAT 
 
-  const handleSendMessage = async () => {
+  /*const handleSendMessage = async () => {
     if (!input.trim() || isTyping) return;
 
     const userMessage = { role: 'user', content: input };
@@ -87,8 +87,73 @@ function App() {
     } finally {
       setIsTyping(false);
     }
-  };
+  };*/
+const [streamingId, setStreamingId] = useState(null)
+const textareaRef = React.useRef(null);
+const handleSendMessage = async () => {
+  if (!input.trim() || isTyping) return;
 
+  const userId = `user-${Date.now()}`;
+  const assistantId = `assistant-${Date.now()}`;
+  const currentInput = input;
+  const historySnapshot = [...messages];
+
+  // 1. Reset UI
+  setInput('');
+  if (textareaRef.current) textareaRef.current.style.height = 'auto';
+  setIsTyping(true);
+
+  // 2. Ajouter le message utilisateur
+  setMessages(prev => [...prev, { id: userId, role: 'user', content: currentInput }]);
+
+  try {
+    const data = await apiService.askQuestion(currentInput, historySnapshot, {
+      model: selectedModel,
+      useReranker: rerankEnabled
+    });
+
+    // 3. Créer la bulle assistant VIDE
+    setMessages(prev => [...prev, { 
+      id: assistantId, 
+      role: 'assistant', 
+      content: '', 
+      sources: data.sources 
+    }]);
+
+
+    // 4. Simuler le streaming en affichant progressivement la réponse
+    const fullResponse = data.answer;
+
+    setStreamingId(assistantId);
+
+      for (let i = 0; i < fullResponse.length; i++) {
+      const char = fullResponse[i];
+
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === assistantId
+            ? { ...msg, content: msg.content + char }
+            : msg
+        )
+      );
+
+      await new Promise(r => setTimeout(r, 18));
+    }
+
+    setIsTyping(false);
+    setStreamingId(null);
+
+  } catch (err) {
+    console.error(err);
+    setError("Erreur de connexion.");
+    setIsTyping(false);
+  }
+};
+
+const messagesEndRef = React.useRef(null);
+useEffect(() => {
+  messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+}, [messages]);
   return (
     <div className="flex h-screen bg-slate-50 text-slate-900 overflow-hidden relative font-sans">
       
@@ -222,22 +287,41 @@ function App() {
           )}
           
           {messages.map((m, i) => (
-            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}>
+            <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}>
+             {/* <div className={`max-w-[90%] md:max-w-2xl p-4 rounded-2xl shadow-sm text-sm leading-relaxed
+                ${m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200'}`}>
+                {m.content}*/}
               <div className={`max-w-[90%] md:max-w-2xl p-4 rounded-2xl shadow-sm text-sm leading-relaxed
                 ${m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200'}`}>
-                {m.content}
+                <div className="flex items-start gap-3">
+                  {/* Icône IA : visible pour l'assistant uniquement */}
+                  {m.role === 'assistant' && (
+                    <div className={`mt-1 p-1 rounded-full bg-slate-100`}>
+                      <Database size={16} className="text-blue-600" />
+                    </div>
+                  )}
+                  
+                  <div className="flex-1 whitespace-pre-wrap">
+                    {m.content}
+                    {/* Curseur : Uniquement sur le message en cours de streaming */}
+                    {m.id === streamingId && (
+                      <span className="inline-block w-2 h-4 ml-1 bg-blue-400 animate-pulse align-middle" />
+                    )}
+                  </div>
+                </div>
                 
-                {m.sources && (
+                {/* Sources */}
+                {m.sources && m.sources.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-1.5">
                     {m.sources.map((source, idx) => (
                       <div key={idx} className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-[9px] font-bold">
                         <span>{source.metadata?.filename || "Source"}</span>
-                        {source.score && <span className="opacity-50">{Math.round(source.score * 100)}%</span>}
                       </div>
                     ))}
                   </div>
                 )}
-              </div>
+              </div> 
+              
             </div>
           ))}
           {isTyping && (
@@ -248,12 +332,14 @@ function App() {
               </div>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </section>
 
         {/* FOOTER / INPUT */}
         <footer className="p-4 bg-white border-t border-slate-200">
           <div className="max-w-4xl mx-auto flex gap-2 items-center bg-slate-100 p-2 rounded-2xl border border-slate-200 focus-within:ring-2 focus-within:ring-blue-400 transition-all">
-            <textarea 
+            <textarea
+              ref={textareaRef} 
               className="flex-1 p-2 bg-transparent outline-none text-sm resize-none max-h-32"
               placeholder="Écrivez votre message..."
               rows="1"
@@ -284,4 +370,4 @@ function App() {
   );
 }
 
-export default App;
+export default App; 
