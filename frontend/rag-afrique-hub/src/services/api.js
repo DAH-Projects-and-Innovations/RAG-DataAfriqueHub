@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const API_BASE_URL = "http://localhost:8000"; // URL de FastAPI
 
-/*export const apiService = {
+export const apiService = {
   // Correspond à RAGPipeline.query()
   askQuestion: async (text, history, config) => {
     // On crée une correspondance (mapping) entre le nom affiché et l'ID attendu par le backend
@@ -34,16 +34,16 @@ const API_BASE_URL = "http://localhost:8000"; // URL de FastAPI
   // Correspond à RAGPipeline.ingest()
   uploadFile: async (file) => {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("files", file);
     //  passer des paramètres au chunker via l'URL ou le body
     const response = await axios.post(`${API_BASE_URL}/ingest`, formData);
     return response.data;
   }
-};*/
+};
 
 
 // une simulation de l'API pour le développement frontend sans backend opérationnel. À remplacer par les appels réels à FastAPI une fois que le backend est prêt.
-export const apiService = {
+/*export const apiService = {
   uploadFile: async (file) => {
     // Simule une attente réseau de 1.5s
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -60,4 +60,4 @@ export const apiService = {
       ]
     };
   }
-};
+};*/
