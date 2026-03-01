@@ -34,7 +34,7 @@ export const apiService = {
   // Correspond à RAGPipeline.ingest()
   uploadFile: async (file) => {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("files", file);
     //  passer des paramètres au chunker via l'URL ou le body
     const response = await axios.post(`${API_BASE_URL}/ingest`, formData);
     return response.data;
