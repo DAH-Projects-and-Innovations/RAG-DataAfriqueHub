@@ -109,10 +109,23 @@ class LLMAdapter(ILLM):
             user_prompt = f"Question: {query}"
         
         # Créer les messages
-        messages = [
-            LLMMessage(role="system", content=system_prompt),
-            LLMMessage(role="user", content=user_prompt)
-        ]
+        messages: List[LLMMessage] = []
+        if system_prompt:
+            messages.append(LLMMessage(role="system", content=system_prompt))
+
+        # Insérer l'historique de conversation si fourni (ex: chat_history envoyé par le frontend)
+        conv_history = kwargs.get('conversation_history') or kwargs.get('chat_history')
+        if conv_history and isinstance(conv_history, list):
+            for m in conv_history:
+                if isinstance(m, LLMMessage):
+                    messages.append(m)
+                else:
+                    role = m.get('role', 'user') if isinstance(m, dict) else 'user'
+                    content = m.get('content', '') if isinstance(m, dict) else str(m)
+                    messages.append(LLMMessage(role=role, content=content))
+
+        # Enfin, ajouter le prompt utilisateur actuel
+        messages.append(LLMMessage(role="user", content=user_prompt))
         
         # Générer la réponse
         response = self.llm.generate(

@@ -169,6 +169,19 @@ class RAGPipeline:
         
         logger.info(f"{len(unique_docs)} documents uniques récupérés")
         metadata['steps'].append({'step': 'retrieval', 'num_docs': len(unique_docs)})
+
+        # DEBUG: log types and score presence to help diagnose Chunk vs Document issues
+        try:
+            types_info = []
+            for d in unique_docs:
+                types_info.append({
+                    'type': type(d).__name__,
+                    'has_score_attr': hasattr(d, 'score'),
+                    'metadata_score': (d.metadata.get('score') if hasattr(d, 'metadata') else None)
+                })
+            print("[DEBUG] Retrieved types info:", types_info)
+        except Exception as _:
+            print("[DEBUG] Could not introspect retrieved docs types")
         
         # 4. Reranking (optionnel)
         if self.reranker and unique_docs:
@@ -240,8 +253,19 @@ class RAGPipeline:
             citation = f"[{i}] {source_info}"
             if page:
                 citation += f" (page {page})"
-            if doc.score:
-                citation += f" (score: {doc.score:.3f})"
+            # Récupérer le score de façon sûre (supporte Document ou Chunk-like)
+            score_val = getattr(doc, 'score', None)
+            if score_val is None:
+                try:
+                    score_val = float(doc.metadata.get('score')) if doc.metadata.get('score') is not None else None
+                except Exception:
+                    score_val = None
+
+            if score_val is not None:
+                try:
+                    citation += f" (score: {score_val:.3f})"
+                except Exception:
+                    citation += f" (score: {score_val})"
             
             citations += f"{citation}\n"
         

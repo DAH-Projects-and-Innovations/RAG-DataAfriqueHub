@@ -331,7 +331,7 @@ ALL_EXAMPLE_PROMPTS = [
 def load_example_prompts(prompt_manager):
     """
     Charge tous les prompts d'exemple dans un gestionnaire.
-    
+
     Args:
         prompt_manager: Instance de PromptManager
     """

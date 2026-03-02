@@ -5,25 +5,26 @@ from src.api.dependencies import get_pipeline
 router = APIRouter(prefix="/query", tags=["RAG"])
 print("📡 Query router ready")  # Log pour vérifier que le routeur est chargé
 
-@router.post("")
-async def ask_question(req, pipeline = Depends(get_pipeline)):
-    try:
-        print(f"Received query request: {req}")
-        # Appel du pipeline
-        response = "Yes"
-        #response = pipeline.query(
-        #    query_text=req.question,
-        #    top_k=req.top_k,
-        #    rerank_top_k=req.rerank_top_k
-        #)
 
-        # On ignore l'option streaming
-        # On renvoie un dictionnaire structuré
-        return {
-            "answer": response.answer,
-            "metadata": response.metadata if hasattr(response, 'metadata') else {},
-            "sources": response.sources if hasattr(response, 'sources') else []
-        }
+@router.post("")
+async def ask_question(req: QueryRequest, pipeline = Depends(get_pipeline)):
+    try:
+        print(f"Received query request: {req.dict()}")
+        # Appel du pipeline en transmettant l'historique de chat au LLM via `llm_params`
+        llm_params = req.llm_params or {}
+        # Le frontend envoie `chat_history` sous forme de liste d'objets {role, content}
+        if req.chat_history:
+            llm_params = {**llm_params, 'conversation_history': req.chat_history}
+
+        response = pipeline.query(
+            query_text=req.question,
+            top_k=req.top_k,
+            rerank_top_k=req.rerank_top_k,
+            llm_params=llm_params
+        )
+
+        # `response` est un `RAGResponse` — convertir en JSON simple
+        return response.to_dict()
 
     except Exception as e:
         print(f"Error during query processing: {str(e)}")

@@ -67,10 +67,10 @@ class RAGResponse:
             'answer': self.answer,
             'sources': [
                 {
-                    'content': s.content,
-                    'metadata': s.metadata,
-                    'doc_id': s.doc_id,
-                    'score': s.score
+                    'content': getattr(s, 'content', str(s)),
+                    'metadata': getattr(s, 'metadata', {}) or {},
+                    'doc_id': getattr(s, 'doc_id', getattr(s, 'chunk_id', None)),
+                    'score': getattr(s, 'score', (getattr(s, 'metadata', {}) or {}).get('score'))
                 }
                 for s in self.sources
             ],

@@ -73,25 +73,47 @@ class DenseRetriever(IRetriever):
         if self.config.include_metadata_filter and (filters or getattr(query, "filters", None)):
             search_filters = {**(filters or {}), **(query.filters or {})}
 
-        # Recherche vectorielle
-        results = self.vector_store.search(
+        # Recherche vectorielle (le vector store peut retourner des Chunks ou Documents)
+        raw_results = self.vector_store.search(
             query_embedding=query_embedding,
             top_k=k,
             filters=search_filters
         )
 
+        # Normaliser les résultats en objets `Document`
+        normalized: List[Document] = []
+        for item in raw_results:
+            if isinstance(item, Document):
+                normalized.append(item)
+            else:
+                # Supporter Chunk-like objects (duck-typing)
+                content = getattr(item, 'content', str(item))
+                meta = getattr(item, 'metadata', {}) or {}
+                # Si l'objet possède un doc_id ou chunk_id, l'utiliser
+                doc_id = getattr(item, 'doc_id', None) or getattr(item, 'chunk_id', None) or meta.get('doc_id')
+                doc = Document(content=content, metadata=meta)
+                if doc_id:
+                    doc.doc_id = doc_id
+                # Si un score existe dans metadata, le placer également sur l'objet Document.score
+                if 'score' in meta:
+                    try:
+                        doc.score = float(meta.get('score'))
+                    except Exception:
+                        doc.score = None
+                normalized.append(doc)
+
         # Filtrer par seuil de similarité si configuré
         if self.config.similarity_threshold is not None:
-            results = [
-                doc for doc in results
-                if doc.metadata.get('score', 0) >= self.config.similarity_threshold
+            normalized = [
+                d for d in normalized
+                if (getattr(d, 'score', None) or d.metadata.get('score', 0)) >= self.config.similarity_threshold
             ]
 
         # Normaliser les scores si demandé
-        if self.config.normalize_scores and results:
-            results = self._normalize_scores(results)
+        if self.config.normalize_scores and normalized:
+            normalized = self._normalize_scores(normalized)
 
-        return results
+        return normalized
 
     def _normalize_scores(self, documents: List[Document]) -> List[Document]:
         """
