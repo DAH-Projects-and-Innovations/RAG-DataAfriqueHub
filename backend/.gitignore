@@ -87,6 +87,8 @@ wheels/
 *.sqlite
 *.sqlite3
 
+data/
+
 # Données temporaires
 data/chroma_db/
 tmp/

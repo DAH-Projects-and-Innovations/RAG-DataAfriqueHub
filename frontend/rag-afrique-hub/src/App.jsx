@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Send, Upload, Database, ChevronLeft, ChevronRight, X, FileText, Play } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Send, Upload, Database, ChevronLeft, ChevronRight, X, FileText, Play, Copy, Check } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import Swal from 'sweetalert2';
 import LogoAfriqueHub from './assets/logo-afrique-hub.jpeg';
 import { apiService } from './services/api';
@@ -20,6 +22,15 @@ function App() {
   // CONFIGURATION RAG
   const [selectedModel, setSelectedModel] = useState('Gemini 1.5 Flash');
   const [rerankEnabled, setRerankEnabled] = useState(true);
+
+  // COPIER RÉPONSE
+  const [copiedId, setCopiedId] = useState(null);
+  const handleCopy = useCallback((id, content) => {
+    navigator.clipboard.writeText(content).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  }, []);
 
   //LOGIQUE D'UPLOAD 
 
@@ -96,7 +107,14 @@ const handleSendMessage = async () => {
   const userId = `user-${Date.now()}`;
   const assistantId = `assistant-${Date.now()}`;
   const currentInput = input;
-  const historySnapshot = [...messages];
+  // Ne conserver que le dernier message de l'assistant et le dernier message de l'utilisateur
+  const historySnapshot = [];
+  const rev = [...messages].slice().reverse();
+  const lastAssistant = rev.find(m => m.role === 'assistant');
+  const lastUser = rev.find(m => m.role === 'user');
+  // On suit l'ordre demandé: assistant puis utilisateur
+  if (lastAssistant) historySnapshot.push({ role: 'assistant', content: lastAssistant.content });
+  if (lastUser) historySnapshot.push({ role: 'user', content: lastUser.content });
 
   // 1. Reset UI
   setInput('');
@@ -294,30 +312,61 @@ useEffect(() => {
               <div className={`max-w-[90%] md:max-w-2xl p-4 rounded-2xl shadow-sm text-sm leading-relaxed
                 ${m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200'}`}>
                 <div className="flex items-start gap-3">
-                  {/* Icône IA : visible pour l'assistant uniquement */}
+                  {/* Icône IA */}
                   {m.role === 'assistant' && (
-                    <div className={`mt-1 p-1 rounded-full bg-slate-100`}>
+                    <div className="mt-1 p-1 rounded-full bg-slate-100 shrink-0">
                       <Database size={16} className="text-blue-600" />
                     </div>
                   )}
-                  
-                  <div className="flex-1 whitespace-pre-wrap">
-                    {m.content}
-                    {/* Curseur : Uniquement sur le message en cours de streaming */}
-                    {m.id === streamingId && (
-                      <span className="inline-block w-2 h-4 ml-1 bg-blue-400 animate-pulse align-middle" />
+
+                  <div className="flex-1 min-w-0">
+                    {m.role === 'assistant' ? (
+                      <>
+                        <div className="markdown">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {m.content}
+                          </ReactMarkdown>
+                        </div>
+                        {/* Curseur streaming */}
+                        {m.id === streamingId && (
+                          <span className="inline-block w-2 h-4 ml-1 bg-blue-400 animate-pulse align-middle" />
+                        )}
+                      </>
+                    ) : (
+                      <div className="whitespace-pre-wrap">{m.content}</div>
                     )}
                   </div>
+
+                  {/* Bouton copier (assistant seulement, hors streaming) */}
+                  {m.role === 'assistant' && m.id !== streamingId && m.content && (
+                    <button
+                      onClick={() => handleCopy(m.id, m.content)}
+                      className="shrink-0 mt-1 p-1 rounded text-slate-300 hover:text-slate-500 transition-colors"
+                      title="Copier la réponse"
+                    >
+                      {copiedId === m.id
+                        ? <Check size={14} className="text-green-500" />
+                        : <Copy size={14} />}
+                    </button>
+                  )}
                 </div>
-                
-                {/* Sources */}
+
+                {/* Sources avec score */}
                 {m.sources && m.sources.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-1.5">
-                    {m.sources.map((source, idx) => (
-                      <div key={idx} className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-[9px] font-bold">
-                        <span>{source.metadata?.filename || "Source"}</span>
-                      </div>
-                    ))}
+                    {m.sources.map((source, idx) => {
+                      const score = source.metadata?.score ?? source.score;
+                      const pct = score != null ? Math.round(score * 100) : null;
+                      return (
+                        <div key={idx} className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-[9px] font-bold">
+                          <FileText size={9} />
+                          <span>{source.metadata?.filename || source.metadata?.source || "Source"}</span>
+                          {pct != null && (
+                            <span className="text-blue-400 font-normal">{pct}%</span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div> 

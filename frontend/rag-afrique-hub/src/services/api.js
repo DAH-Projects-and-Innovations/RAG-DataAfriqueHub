@@ -14,7 +14,7 @@ export const apiService = {
     };
     // structure le payload selon les besoins de l'orchestrateur
     const payload = {
-      query_text: text,
+      question: text,
       // passe l'historique pour le Query Rewriting 
       chat_history: history, 
       top_k: 5,
