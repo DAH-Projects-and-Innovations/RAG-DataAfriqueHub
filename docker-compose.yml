@@ -1,0 +1,16 @@
+services:
+  # Ton moteur RAG
+  backend-rag:
+    build: ./backend
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./backend/data:/app/data
+
+  # Ton interface utilisateur
+  frontend-ui:
+    build: ./frontend/rag-afrique-hub
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend-rag
