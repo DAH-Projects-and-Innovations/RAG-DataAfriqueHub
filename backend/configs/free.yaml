@@ -28,7 +28,7 @@ retriever:
 reranker:
   name: "cross_encoder"
   params:
-    model_name: "BAAI/bge-reranker-large"
+    model_name: "cross-encoder/ms-marco-MiniLM-L-6-v2"
     device: "cpu"
     batch_size: 16
 
@@ -59,7 +59,7 @@ llm:
   name: "mistral"  # Provider Mistral
   params:
     model: "mistral-large-latest"  # ou "mistral-medium-latest", "mistral-small-latest"
-    api_key: "MISTRAL_API_KEY"  # Variable d'environnement
+    api_key: "${MISTRAL_API_KEY}"  # Variable d'environnement
     temperature: 0.7
     max_tokens: 1000
     top_p: 0.9

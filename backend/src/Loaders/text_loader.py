@@ -46,7 +46,12 @@ class UnifiedDocumentLoader(IDocumentLoader):
 
             all_documents.append(Document(
                 content=content,
-                metadata={"source": file_path, "format": ext, "lang": lang}
+                metadata={
+                    "source": file_path,
+                    "filename": os.path.basename(file_path),
+                    "format": ext,
+                    "lang": lang,
+                }
             ))
 
         return all_documents

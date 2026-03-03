@@ -145,16 +145,16 @@ class IReranker(ABC):
     """Interface pour réordonner les résultats"""
     
     @abstractmethod
-    def rerank(self, query: str, documents: List[Document], top_k: int = 5, **kwargs) -> List[Document]:
+    def rerank(self, query: Query, documents: List[Document], top_k: int = 5, **kwargs) -> List[Document]:
         """
         Réordonne les documents par pertinence
-        
+
         Args:
-            query: Texte de la requête
+            query: Objet requête
             documents: Documents à réordonner
             top_k: Nombre de documents à retourner après reranking
             **kwargs: Paramètres du reranker
-            
+
         Returns:
             Documents réordonnés
         """

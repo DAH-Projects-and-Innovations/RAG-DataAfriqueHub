@@ -201,7 +201,8 @@ class BM25Retriever(IRetriever):
             # Vérifier les filtres de métadonnées
             if filters and not self._match_filters(doc, filters):
                 continue
-            if query.filters and not self._match_filters(doc, query.filters):
+            query_filters = getattr(query, 'filters', None)
+            if query_filters and not self._match_filters(doc, query_filters):
                 continue
             
             score = self._compute_bm25_score(query_tokens, idx)
@@ -212,7 +213,7 @@ class BM25Retriever(IRetriever):
             
             # Créer une copie du document avec le score
             doc_copy = Document(
-                id=doc.id,
+                doc_id=doc.doc_id,
                 content=doc.content,
                 metadata={
                     **doc.metadata,

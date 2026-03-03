@@ -170,19 +170,6 @@ class RAGPipeline:
         logger.info(f"{len(unique_docs)} documents uniques récupérés")
         metadata['steps'].append({'step': 'retrieval', 'num_docs': len(unique_docs)})
 
-        # DEBUG: log types and score presence to help diagnose Chunk vs Document issues
-        try:
-            types_info = []
-            for d in unique_docs:
-                types_info.append({
-                    'type': type(d).__name__,
-                    'has_score_attr': hasattr(d, 'score'),
-                    'metadata_score': (d.metadata.get('score') if hasattr(d, 'metadata') else None)
-                })
-            print("[DEBUG] Retrieved types info:", types_info)
-        except Exception as _:
-            print("[DEBUG] Could not introspect retrieved docs types")
-        
         # 4. Reranking (optionnel)
         if self.reranker and unique_docs:
             try:

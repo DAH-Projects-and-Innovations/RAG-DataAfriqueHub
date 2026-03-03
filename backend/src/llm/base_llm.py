@@ -430,8 +430,7 @@ class MistralLLM(BaseLLM):
         if self._client is None:
             try:
                 from mistralai import Mistral
-                key = os.getenv(self.config.api_key)
-                self._client = Mistral(api_key=key)
+                self._client = Mistral(api_key=self.config.api_key)
             except ImportError:
                 raise ImportError(
                     "mistralai package required. Install with: pip install mistralai"
