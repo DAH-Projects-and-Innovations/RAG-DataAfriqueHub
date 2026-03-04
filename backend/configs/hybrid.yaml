@@ -35,21 +35,26 @@ query_rewriter:
 reranker:
   name: "cohere"
   params:
-    api_key: "${COHERE_API_KEY}"
+    api_key: "COHERE_API_KEY"
     model: "rerank-english-v3.0"  # ou "rerank-multilingual-v3.0"
     top_n: 5
 
-# Modèle de génération (payant, excellent rapport qualité/prix)
+# Gestionnaire de prompts
+prompt_manager:
+  name: "default"
+  params: {}
+
+
+# Modèle de génération (Gemini - Google AI)
 llm:
-  name: "openai"
+  name: "gemini"
   params:
-    api_key: "${OPENAI_API_KEY}"
-    model: "gpt-4o-mini"  # Bon compromis coût/performance
+    api_key: "GOOGLE_API_KEY"  # Obteniez une clé gratuite sur https://ai.google.dev
+    model: "gemini-2.0-flash"  # Rapide et efficace, ou "gemini-1.5-pro" pour plus de capacités
     temperature: 0.7
     max_tokens: 1500
     top_p: 0.95
-    frequency_penalty: 0.0
-    presence_penalty: 0.0
+    top_k: 40
 
 # Configuration du pipeline
 pipeline_config:
