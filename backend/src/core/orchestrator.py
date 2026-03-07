@@ -285,4 +285,28 @@ class RAGPipeline:
         except Exception as e:
             logger.error(f"Erreur lors de la récupération des stats: {e}")
             return {'error': str(e)}
+        
+    
+    def delete_document(self, filename: str) -> bool:
+        """
+        Supprime un document du vector store en utilisant son nom de source.
+        
+        Args:
+            filename: Le nom d'origine du fichier à supprimer
+            
+        Returns:
+            True si la suppression a été tentée, False en cas d'erreur
+        """
+        logger.info(f"Demande de suppression du document: {filename}")
+        try:
+            # On utilise le vector_store pour supprimer les entrées.
+            # La plupart des VectorStores (Chroma, Pinecone) utilisent un filtre 'where'
+            # On cible la métadonnée 'source' qui contient généralement le nom du fichier.
+            self.vector_store.delete(where={"source": filename})
+            
+            logger.info(f"Document {filename} supprimé avec succès du vector store")
+            return True
+        except Exception as e:
+            logger.error(f"Erreur lors de la suppression de {filename} dans le pipeline: {e}")
+            return False
 

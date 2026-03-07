@@ -8,7 +8,16 @@ import { apiService } from './services/api';
 
 function App() {
   // --- ÉTATS ---
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem('chat_history');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [uploadedFiles, setUploadedFiles] = useState(() => {
+    const saved = localStorage.getItem('indexed_files');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [input, setInput] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
@@ -16,7 +25,7 @@ function App() {
 
   // ÉTATS FICHIERS
   const [filesToUpload, setFilesToUpload] = useState([]); 
-  const [uploadedFiles, setUploadedFiles] = useState([]); 
+  //const [uploadedFiles, setUploadedFiles] = useState([]); 
   const [isUploading, setIsUploading] = useState(false);
 
   // CONFIGURATION RAG
@@ -70,108 +79,120 @@ function App() {
     }
   };
 
-  // LOGIQUE CHAT 
 
-  /*const handleSendMessage = async () => {
+  const [streamingId, setStreamingId] = useState(null)
+  const textareaRef = React.useRef(null);
+
+  //  SAUVEGARDE AUTOMATIQUE 
+  useEffect(() => {
+    localStorage.setItem('chat_history', JSON.stringify(messages));
+  }, [messages]);
+
+  useEffect(() => {
+    localStorage.setItem('indexed_files', JSON.stringify(uploadedFiles));
+  }, [uploadedFiles]);
+
+  const handleSendMessage = async () => {
     if (!input.trim() || isTyping) return;
 
-    const userMessage = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
+    const userId = `user-${Date.now()}`;
+    const assistantId = `assistant-${Date.now()}`;
     const currentInput = input;
+    // Ne conserver que le dernier message de l'assistant et le dernier message de l'utilisateur
+    const historySnapshot = [];
+    const rev = [...messages].slice().reverse();
+    const lastAssistant = rev.find(m => m.role === 'assistant');
+    const lastUser = rev.find(m => m.role === 'user');
+    // On suit l'ordre demandé: assistant puis utilisateur
+    if (lastAssistant) historySnapshot.push({ role: 'assistant', content: lastAssistant.content });
+    if (lastUser) historySnapshot.push({ role: 'user', content: lastUser.content });
+
+    // 1. Reset UI
     setInput('');
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setIsTyping(true);
 
+    // 2. Ajouter le message utilisateur
+    setMessages(prev => [...prev, { id: userId, role: 'user', content: currentInput }]);
+
     try {
-      const data = await apiService.askQuestion(currentInput, messages, {
+      const data = await apiService.askQuestion(currentInput, historySnapshot, {
         model: selectedModel,
         useReranker: rerankEnabled
       });
 
+      // 3. Créer la bulle assistant VIDE
       setMessages(prev => [...prev, { 
+        id: assistantId, 
         role: 'assistant', 
-        content: data.answer, 
+        content: '', 
         sources: data.sources 
       }]);
+
+
+      // 4. Simuler le streaming en affichant progressivement la réponse
+      const fullResponse = data.answer;
+
+      setStreamingId(assistantId);
+
+        for (let i = 0; i < fullResponse.length; i++) {
+        const char = fullResponse[i];
+
+        setMessages(prev =>
+          prev.map(msg =>
+            msg.id === assistantId
+              ? { ...msg, content: msg.content + char }
+              : msg
+          )
+        );
+
+        await new Promise(r => setTimeout(r, 18));
+      }
+
+      setIsTyping(false);
+      setStreamingId(null);
+
     } catch (err) {
-      setError("Erreur de connexion. Veuillez réessayer.");
-      setTimeout(() => setError(null), 5000);
-    } finally {
+      console.error(err);
+      setError("Erreur de connexion.");
       setIsTyping(false);
     }
-  };*/
-const [streamingId, setStreamingId] = useState(null)
-const textareaRef = React.useRef(null);
-const handleSendMessage = async () => {
-  if (!input.trim() || isTyping) return;
+  };
 
-  const userId = `user-${Date.now()}`;
-  const assistantId = `assistant-${Date.now()}`;
-  const currentInput = input;
-  // Ne conserver que le dernier message de l'assistant et le dernier message de l'utilisateur
-  const historySnapshot = [];
-  const rev = [...messages].slice().reverse();
-  const lastAssistant = rev.find(m => m.role === 'assistant');
-  const lastUser = rev.find(m => m.role === 'user');
-  // On suit l'ordre demandé: assistant puis utilisateur
-  if (lastAssistant) historySnapshot.push({ role: 'assistant', content: lastAssistant.content });
-  if (lastUser) historySnapshot.push({ role: 'user', content: lastUser.content });
+  const messagesEndRef = React.useRef(null);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-  // 1. Reset UI
-  setInput('');
-  if (textareaRef.current) textareaRef.current.style.height = 'auto';
-  setIsTyping(true);
-
-  // 2. Ajouter le message utilisateur
-  setMessages(prev => [...prev, { id: userId, role: 'user', content: currentInput }]);
-
-  try {
-    const data = await apiService.askQuestion(currentInput, historySnapshot, {
-      model: selectedModel,
-      useReranker: rerankEnabled
+  //  LOGIQUE DE SUPPRESSION 
+  const handleDeleteFile = async (fileName) => {
+    const result = await Swal.fire({
+      title: 'Supprimer le document ?',
+      text: `"${fileName}" sera retiré de la base de connaissances.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Supprimer',
+      cancelButtonText: 'Annuler'
     });
 
-    // 3. Créer la bulle assistant VIDE
-    setMessages(prev => [...prev, { 
-      id: assistantId, 
-      role: 'assistant', 
-      content: '', 
-      sources: data.sources 
-    }]);
-
-
-    // 4. Simuler le streaming en affichant progressivement la réponse
-    const fullResponse = data.answer;
-
-    setStreamingId(assistantId);
-
-      for (let i = 0; i < fullResponse.length; i++) {
-      const char = fullResponse[i];
-
-      setMessages(prev =>
-        prev.map(msg =>
-          msg.id === assistantId
-            ? { ...msg, content: msg.content + char }
-            : msg
-        )
-      );
-
-      await new Promise(r => setTimeout(r, 18));
+    if (result.isConfirmed) {
+      try {
+        // APPEL API (Important : voir section Backend plus bas)
+        await apiService.deleteFile(fileName); 
+        setUploadedFiles(prev => prev.filter(f => f.name !== fileName));
+        Swal.fire('Supprimé !', 'Le fichier a été retiré.', 'success');
+      } catch (err) {
+        Swal.fire('Erreur', 'Impossible de supprimer le fichier côté serveur.', 'error');
+      }
     }
+  };
 
-    setIsTyping(false);
-    setStreamingId(null);
+  const clearChat = () => {
+    setMessages([]);
+    localStorage.removeItem('chat_history');
+  };
 
-  } catch (err) {
-    console.error(err);
-    setError("Erreur de connexion.");
-    setIsTyping(false);
-  }
-};
-
-const messagesEndRef = React.useRef(null);
-useEffect(() => {
-  messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-}, [messages]);
   return (
     <div className="flex h-screen bg-slate-50 text-slate-900 overflow-hidden relative font-sans">
       
@@ -239,6 +260,7 @@ useEffect(() => {
               </div>
             )}
 
+            
             {/* Déjà Indexés (Gris) */}
             {uploadedFiles.length > 0 && (
               <div className="pt-4 border-t border-slate-100">
@@ -246,13 +268,22 @@ useEffect(() => {
                 <div className="space-y-1">
                   {uploadedFiles.map((f, i) => (
                     <div key={i} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg text-[10px] text-slate-500 italic">
-                      <Database size={12} className="text-blue-400"/>
-                      <span className="truncate">{f.name}</span>
+                      <Database size={12} className="text-blue-400 shrink-0"/>
+                      <span className="truncate flex-1">{f.name}</span>
+                      
+                      {/* BOUTON TOUJOURS VISIBLE */}
+                      <button 
+                        onClick={() => handleDeleteFile(f.name)}
+                        className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                        title="Supprimer de l'index"
+                      >
+                        <X size={14} />
+                      </button>
                     </div>
                   ))}
                 </div>
               </div>
-            )}
+            )} 
           </div>
 
           {/* CONFIGURATION */}
@@ -285,6 +316,9 @@ useEffect(() => {
           ${isSidebarOpen ? 'pl-16 lg:pl-8' : 'pl-16'}
         `}>
           <h1 className="font-semibold text-slate-700 truncate text-sm md:text-base">ASSISTANT POUR REPONDRE A VOS QUESTIONS</h1>
+          <button onClick={clearChat} className="ml-auto mr-4 text-xs text-slate-400 hover:text-red-500">
+            Effacer la discussion
+          </button>
         </header>
 
         {/* ERREUR */}

@@ -72,3 +72,24 @@ async def ingest_uploaded_files(
         "chunks_ingested_total": int(chunks_count),
         "files": saved_files,
     }
+
+
+@router.delete("/{file_name}")
+async def delete_file(
+    file_name: str, 
+    pipeline=Depends(get_pipeline)
+):
+    """
+    Supprime un document de la base de connaissances (Vector Store).
+    """
+    try:
+        # demande au pipeline de supprimer les chunks liés à ce nom de fichier
+        # Note : La méthode delete_document doit exister dans  l'objet Pipeline
+        success = pipeline.delete_document(file_name)
+        
+        if not success:
+            raise HTTPException(status_code=404, detail="Document non trouvé dans l'index.")
+            
+        return {"status": "success", "message": f"Document {file_name} supprimé."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la suppression : {str(e)}")

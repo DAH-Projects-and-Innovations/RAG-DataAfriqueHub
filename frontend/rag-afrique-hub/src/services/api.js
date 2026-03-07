@@ -1,9 +1,17 @@
 import axios from 'axios';
 
-const API_BASE_URL = "http://localhost:8000"; // URL de FastAPI
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const apiService = {
   // Correspond à RAGPipeline.query()
+
+  deleteFile: async (fileName) => {
+    // Encode le nom du fichier pour gérer les espaces/caractères spéciaux
+    const encodedName = encodeURIComponent(fileName);
+    const response = await axios.delete(`${API_BASE_URL}/ingest/${encodedName}`);
+    return response.data;
+  },
+
   askQuestion: async (text, history, config) => {
     // On crée une correspondance (mapping) entre le nom affiché et l'ID attendu par le backend
      const modelMapping = {
