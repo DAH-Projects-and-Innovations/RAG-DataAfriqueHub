@@ -38,7 +38,7 @@ prompt_managers:
   params: {}
 
 # Modèle de génération (Ollama local)
-#llm:
+# llm:
 #  name: "ollama"  # Ce nom sera utilisé comme 'provider'
 #  params:
 #    model: "llama3.1:8b"
@@ -56,18 +56,17 @@ prompt_managers:
 #    repeat_penalty: 1.1
 
 llm:
-  name: "mistral"  # Provider Mistral
-  params:
-    model: "mistral-large-latest"  # ou "mistral-medium-latest", "mistral-small-latest"
-    api_key: "${MISTRAL_API_KEY}"  # Variable d'environnement
-    temperature: 0.7
-    max_tokens: 1000
-    top_p: 0.9
-    # Paramètres RAG
-    enable_citations: false
-    system_prompt_template: "rag_system"
-    user_prompt_template: "rag_user"
-    prevent_hallucinations: true
+ name: "huggingface"
+ params:
+   model: "HuggingFaceH4/zephyr-7b-beta"
+   api_key: "${HF_TOKEN}"
+   temperature: 0.7
+   max_tokens: 1000
+   top_p: 0.9
+   enable_citations: false
+   system_prompt_template: "rag_system"
+   user_prompt_template: "rag_user"
+   prevent_hallucinations: true
 
 # Configuration du pipeline
 pipeline_config:

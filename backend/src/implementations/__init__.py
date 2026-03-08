@@ -31,6 +31,8 @@ def register_all_components():
 
     # LLMs - UTILISER LLMAdapterFactory au lieu de LLMAdapter
     f.register_component("llms", "mistral", LLMAdapterFactory)
+    f.register_component("llms", "huggingface", LLMAdapterFactory)  # ← AJOUT HuggingFace
+    f.register_component("llms", "openai", LLMAdapterFactory)       # ← AJOUT OpenAI
     # Prompt Managers
     f.register_component("prompt_managers", "default", lambda: create_default_prompt_manager())
 
