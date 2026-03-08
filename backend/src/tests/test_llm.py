@@ -1,39 +1,19 @@
-"""
-Tests des LLMs du projet RAG-DataAfriqueHub.
-Branche : test-llm
-
-LLMs testés :
-  - MistralLLM   → Vrai appel API (MISTRAL_API_KEY requis)
-  - OpenAILLM    → Test avec mock (pas de clé disponible)
-  - LocalLLM     → Test avec mock (Ollama non installé)
-
-Usage :
-    cd backend
-    python src/tests/test_llm.py
-"""
-
 import sys
 import os
 import types
 import unittest
 from unittest.mock import MagicMock, patch
 
-# ============================================================
 # ÉTAPE 1 : Ajouter le dossier backend au path
-# ============================================================
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
-# ============================================================
 # ÉTAPE 2 : Charger les variables d'environnement
-# ============================================================
 from dotenv import load_dotenv
 load_dotenv()
 
-# ============================================================
 # ÉTAPE 3 : Imports réels du projet
-# ============================================================
 from src.core.models import Document
 from src.core.interfaces import ILLM
 
@@ -83,19 +63,17 @@ def load_llm_class(filename, class_name, extra_mocks=None):
     return getattr(module, class_name)
 
 
-# ============================================================
 # Charger les 3 classes LLM
-# ============================================================
 
-# Mistral : mistralai doit être installé (pip install mistralai)
+# Mistral :
 MistralLLM = load_llm_class("mistral_llm.py", "MistralLLM")
 
-# OpenAI : on mocke la librairie openai
+# OpenAI :
 mock_openai_lib = MagicMock()
 sys.modules['openai'] = mock_openai_lib
 OpenAILLM = load_llm_class("openai_llm.py", "OpenAILLM")
 
-# LocalLLM : on mocke langchain
+# LocalLLM :
 sys.modules['langchain_community'] = MagicMock()
 sys.modules['langchain_community.llms'] = MagicMock()
 sys.modules['langchain_core'] = MagicMock()
@@ -106,9 +84,7 @@ LocalLLM = load_llm_class("ollama_llm.py", "LocalLLM", extra_mocks={
 })
 
 
-# ============================================================
 # TESTS MISTRAL (vrais appels API)
-# ============================================================
 
 class TestMistralLLM(unittest.TestCase):
     """Tests réels du MistralLLM avec l'API Mistral."""
@@ -184,9 +160,7 @@ class TestMistralLLM(unittest.TestCase):
         print(f"   ✅ Réponse avec prompt custom : {response[:150]}...")
 
 
-# ============================================================
 # TESTS OPENAI (mocks — pas de clé disponible)
-# ============================================================
 
 class TestOpenAILLM(unittest.TestCase):
     """Tests du OpenAILLM avec mocks."""
@@ -241,9 +215,7 @@ class TestOpenAILLM(unittest.TestCase):
         print("   ✅ OpenAI prompt personnalisé OK")
 
 
-# ============================================================
 # TESTS LOCAL LLM / OLLAMA (mocks — non installé)
-# ============================================================
 
 class TestLocalLLM(unittest.TestCase):
     """Tests du LocalLLM (LlamaCpp) avec mocks."""
@@ -291,10 +263,7 @@ class TestLocalLLM(unittest.TestCase):
         print("   ✅ LocalLLM prompt anti-hallucination OK")
 
 
-# ============================================================
 # MAIN
-# ============================================================
-
 if __name__ == "__main__":
     print("=" * 60)
     print(" TESTS LLM - RAG-DataAfriqueHub")
