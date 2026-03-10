@@ -15,6 +15,7 @@ from .interfaces import (
 from .config_schema import PipelineConfigSchema
 
 from src.llm.prompt_manager import PromptManager
+from src.retrieval.reranker import RerankerConfig
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +139,8 @@ class RAGPipelineFactory:
         # Création des composants optionnels
         query_rewriter = None
         if 'query_rewriter' in config:
+            # Passer le LLM aux params du query_rewriter
+            config['query_rewriter']['params']['llm'] = llm
             query_rewriter = cls._create_component('query_rewriters', config['query_rewriter'])
         
         reranker = None
@@ -175,7 +178,7 @@ class RAGPipelineFactory:
         """
         
         name = component_config['name']
-        params = component_config.get('params', {})
+        params = component_config.get('params', {}).copy()  # Copier pour ne pas modifier l'original
         
         if name not in cls._registry[component_type]:
             available = ', '.join(cls._registry[component_type].keys())
@@ -188,6 +191,12 @@ class RAGPipelineFactory:
         logger.debug(f"Création du composant: {component_type}/{name}")
         
         try:
+            # Gérer les rerankers spécialement pour convertir top_n en RerankerConfig
+            if component_type == 'rerankers':
+                top_n = params.pop('top_n', None)
+                if top_n is not None:
+                    params['config'] = RerankerConfig(top_k=top_n)
+            
             return component_class(**params)
         except Exception as e:
             logger.error(f"Erreur lors de la création de {component_type}/{name}: {e}")
