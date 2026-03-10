@@ -1,4 +1,4 @@
-# Modèle d'embedding (gratuit)
+# Modèle d'embedding (local, gratuit)
 embedder:
   name: "sentence_transformers"
   params:
@@ -7,7 +7,7 @@ embedder:
     normalize_embeddings: true
     batch_size: 32
 
-# Base de données vectorielle (gratuite, locale)
+# Base de données vectorielle (locale)
 vector_store:
   name: "chroma"
   params:
@@ -21,62 +21,53 @@ retriever:
   params:
     search_type: "similarity"
     score_threshold: 0.3
-    fetch_k: 20
-
-# Query Rewriting (payant, optionnel mais recommandé)
-query_rewriter:
-  name: "llm_rewriter"
-  params:
-    num_variations: 3
-    temperature: 0.8
-    # Utilise le LLM défini ci-dessous
+    top_k: 20
 
 # Reranking (payant, très efficace)
+# Nécessite COHERE_API_KEY dans le .env
 reranker:
   name: "cohere"
   params:
-    api_key: "COHERE_API_KEY"
+    api_key: "${COHERE_API_KEY}"
     model: "rerank-english-v3.0"  # ou "rerank-multilingual-v3.0"
     top_n: 5
 
 # Gestionnaire de prompts
-prompt_manager:
+prompt_managers:
   name: "default"
   params: {}
 
-
 # Modèle de génération (Gemini - Google AI)
+# Obtenir une clé gratuite sur https://ai.google.dev
 llm:
   name: "gemini"
   params:
-    api_key: "GOOGLE_API_KEY"  # Obteniez une clé gratuite sur https://ai.google.dev
-    model: "gemini-2.0-flash"  # Rapide et efficace, ou "gemini-1.5-pro" pour plus de capacités
+    api_key: "${GOOGLE_API_KEY}"
+    model: "gemini-2.0-flash"
     temperature: 0.7
     max_tokens: 1500
     top_p: 0.95
-    top_k: 40
 
 # Modèles disponibles — exposés via GET /models (utilisé par le frontend)
 models:
-  - id: "gpt-4o-mini"
-    label: "GPT-4o mini (OpenAI)"
-    provider: "openai"
+  - id: "gemini-2.0-flash"
+    label: "Gemini 2.0 Flash (Google)"
+    provider: "gemini"
     default: true
-  - id: "gpt-4o"
-    label: "GPT-4o (OpenAI)"
-    provider: "openai"
+  - id: "gemini-1.5-pro"
+    label: "Gemini 1.5 Pro (Google)"
+    provider: "gemini"
     default: false
 
 # Configuration du pipeline
 pipeline_config:
   name: "hybrid_rag_pipeline"
   version: "1.0.0"
-  default_top_k: 10  # On récupère plus de docs pour le reranking
-  default_rerank_top_k: 5  # On garde les 5 meilleurs après reranking
+  default_top_k: 10
+  default_rerank_top_k: 5
   enable_caching: true
   log_level: "INFO"
 
   # Métriques estimées
   estimated_cost_per_query: 0.02  # USD
   expected_latency: 2  # secondes
-
