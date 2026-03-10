@@ -51,6 +51,17 @@ llm:
     frequency_penalty: 0.0
     presence_penalty: 0.0
 
+# Modèles disponibles — exposés via GET /models (utilisé par le frontend)
+models:
+  - id: "gpt-4o-mini"
+    label: "GPT-4o mini (OpenAI)"
+    provider: "openai"
+    default: true
+  - id: "gpt-4o"
+    label: "GPT-4o (OpenAI)"
+    provider: "openai"
+    default: false
+
 # Configuration du pipeline
 pipeline_config:
   name: "hybrid_rag_pipeline"
@@ -59,7 +70,7 @@ pipeline_config:
   default_rerank_top_k: 5  # On garde les 5 meilleurs après reranking
   enable_caching: true
   log_level: "INFO"
-  
+
   # Métriques estimées
   estimated_cost_per_query: 0.02  # USD
   expected_latency: 2  # secondes

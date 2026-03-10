@@ -5,11 +5,14 @@ from pathlib import Path
 from typing import Dict, Any, Type, Optional
 import logging
 
+from pydantic import ValidationError
+
 from .orchestrator import RAGPipeline
 from .interfaces import (
     IDocumentLoader, IChunker, IEmbedder, IVectorStore,
     IRetriever, IReranker, IQueryRewriter, ILLM
 )
+from .config_schema import PipelineConfigSchema
 
 from src.llm.prompt_manager import PromptManager
 
@@ -74,7 +77,20 @@ class RAGPipelineFactory:
         
         # Remplacement des variables d'environnement
         config = cls._replace_env_vars(config)
-        
+
+        # Validation du schéma avec Pydantic (erreur claire au démarrage)
+        try:
+            PipelineConfigSchema(**config)
+            logger.info("Validation du schéma de configuration réussie")
+        except ValidationError as exc:
+            errors = "\n".join(
+                f"  • {' → '.join(str(loc) for loc in e['loc'])}: {e['msg']}"
+                for e in exc.errors()
+            )
+            raise ValueError(
+                f"Configuration invalide dans '{config_path}':\n{errors}"
+            ) from exc
+
         logger.info(f"Configuration chargée depuis: {config_path}")
         return config
     
@@ -128,7 +144,10 @@ class RAGPipelineFactory:
         if 'reranker' in config:
             reranker = cls._create_component('rerankers', config['reranker'])
         
-        # Création du pipeline
+        # Création du pipeline — on fusionne pipeline_config et models pour exposition via /models
+        pipeline_cfg = dict(config.get('pipeline_config', {}))
+        pipeline_cfg['models'] = config.get('models', [])
+
         pipeline = RAGPipeline(
             embedder=embedder,
             vector_store=vector_store,
@@ -136,9 +155,9 @@ class RAGPipelineFactory:
             llm=llm,
             query_rewriter=query_rewriter,
             reranker=reranker,
-            config=config.get('pipeline_config', {})
+            config=pipeline_cfg,
         )
-        
+
         logger.info("Pipeline créé avec succès")
         return pipeline
     

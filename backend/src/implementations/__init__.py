@@ -8,6 +8,7 @@ from src.core.interfaces import (
 from src.Loaders.text_loader import UnifiedDocumentLoader
 from src.retrieval.retrieval_strategy import RetrievalStrategy
 from src.Chunkers.basic_chunker import ConfigurableChunker
+from src.Chunkers.semantic_chunker import SemanticChunker
 from src.Embedders.dummy_embedder import LocalSentenceEmbedder
 from src.vectorstores.simple_store import FAISSVectorStore
 from src.vectorstores.chroma_store import ChromaVectorStore
@@ -22,6 +23,7 @@ def register_all_components():
     f = RAGPipelineFactory
     f.register_component("loaders", "text_loader", UnifiedDocumentLoader)
     f.register_component("chunkers", "overlap_chunker", ConfigurableChunker)
+    f.register_component("chunkers", "semantic_chunker", SemanticChunker)
     f.register_component("embedders", "sentence_transformers", LocalSentenceEmbedder)
     f.register_component("vector_stores", "chroma", ChromaVectorStore)
     f.register_component("retrievers", "vector_retriever", RetrievalStrategy)

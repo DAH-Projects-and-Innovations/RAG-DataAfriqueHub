@@ -112,10 +112,20 @@ class IVectorStore(ABC):
         pass
     
     @abstractmethod
+    def delete(self, where: Dict[str, Any]) -> None:
+        """
+        Supprime les chunks correspondant aux filtres metadata donnés.
+
+        Args:
+            where: Dictionnaire de filtres metadata (ex: {"filename": "rapport.pdf"})
+        """
+        pass
+
+    @abstractmethod
     def delete_collection(self, collection_name: str) -> None:
         """Supprime une collection"""
         pass
-    
+
     @abstractmethod
     def get_collection_stats(self, collection_name: str) -> Dict[str, Any]:
         """Retourne les statistiques d'une collection"""

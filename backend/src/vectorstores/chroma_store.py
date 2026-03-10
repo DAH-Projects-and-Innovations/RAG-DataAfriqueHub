@@ -1,8 +1,11 @@
+import logging
 import chromadb
 from chromadb.config import Settings
 from typing import List, Dict, Any, Optional
 from src.core.interfaces import IVectorStore
 from src.core.models import Chunk, Document
+
+logger = logging.getLogger(__name__)
 
 class ChromaVectorStore(IVectorStore):
     def __init__(
@@ -66,11 +69,30 @@ class ChromaVectorStore(IVectorStore):
 
         return docs
 
+    def delete(self, where: Dict[str, Any]) -> None:
+        """
+        Supprime les chunks dont les métadonnées correspondent aux filtres.
+
+        Args:
+            where: Filtres metadata ChromaDB (ex: {"filename": "rapport.pdf"})
+
+        Raises:
+            ValueError: Si aucun filtre n'est fourni (évite la suppression totale accidentelle)
+        """
+        if not where:
+            raise ValueError("Un filtre 'where' non vide est requis pour éviter la suppression totale.")
+        try:
+            self.collection.delete(where=where)
+            logger.info(f"Chunks supprimés avec le filtre: {where}")
+        except Exception as e:
+            logger.error(f"Erreur lors de la suppression avec filtre {where}: {e}")
+            raise
+
     def delete_collection(self, collection_name: str) -> None:
         try:
             self.client.delete_collection(name=collection_name)
         except Exception as e:
-            print(f"Erreur lors de la suppression : {e}")
+            logger.error(f"Erreur lors de la suppression de la collection : {e}")
 
     def get_collection_stats(self, collection_name: str) -> Dict[str, Any]:
         return {"total_vectors": self.collection.count()}

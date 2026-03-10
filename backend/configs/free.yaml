@@ -68,6 +68,13 @@ llm:
    user_prompt_template: "rag_user"
    prevent_hallucinations: true
 
+# Modèles disponibles — exposés via GET /models (utilisé par le frontend)
+models:
+  - id: "HuggingFaceH4/zephyr-7b-beta"
+    label: "Zephyr 7B (HuggingFace)"
+    provider: "huggingface"
+    default: true
+
 # Configuration du pipeline
 pipeline_config:
   name: "free_rag_pipeline"

@@ -29,8 +29,24 @@ function App() {
   const [isUploading, setIsUploading] = useState(false);
 
   // CONFIGURATION RAG
-  const [selectedModel, setSelectedModel] = useState('Gemini 1.5 Flash');
+  const [availableModels, setAvailableModels] = useState([]);
+  const [selectedModelId, setSelectedModelId] = useState('');
   const [rerankEnabled, setRerankEnabled] = useState(true);
+
+  // Chargement des modèles disponibles depuis le backend au montage
+  useEffect(() => {
+    apiService.getModels()
+      .then((models) => {
+        setAvailableModels(models);
+        const defaultModel = models.find(m => m.default) || models[0];
+        if (defaultModel) setSelectedModelId(defaultModel.id);
+      })
+      .catch(() => {
+        // Fallback si le backend n'est pas encore disponible
+        setAvailableModels([{ id: 'default', label: 'Modèle par défaut', default: true }]);
+        setSelectedModelId('default');
+      });
+  }, []);
 
   // COPIER RÉPONSE
   const [copiedId, setCopiedId] = useState(null);
@@ -117,8 +133,8 @@ function App() {
 
     try {
       const data = await apiService.askQuestion(currentInput, historySnapshot, {
-        model: selectedModel,
-        useReranker: rerankEnabled
+        modelId: selectedModelId,
+        useReranker: rerankEnabled,
       });
 
       // 3. Créer la bulle assistant VIDE
@@ -289,15 +305,18 @@ function App() {
           {/* CONFIGURATION */}
           <div className="pt-4 border-t border-slate-100">
             <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Modèle IA</h3>
-            <select 
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xm  focus:ring-2 focus:ring-blue-500 outline-none"
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
+            <select
+              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              value={selectedModelId}
+              onChange={(e) => setSelectedModelId(e.target.value)}
+              disabled={availableModels.length === 0}
             >
-              <option value="Gemini 1.5 Flash">Gemini 1.5 Flash</option>
-              <option value="GPT-4o-mini">GPT-4o-mini</option>
-              <option value="Ollama-Llama3">Llama 3 (Local)</option>
-              <option value="Mistral-7B">Mistral 7B (Local/Gratuit)</option>
+              {availableModels.length === 0 && (
+                <option value="">Chargement…</option>
+              )}
+              {availableModels.map((m) => (
+                <option key={m.id} value={m.id}>{m.label}</option>
+              ))}
             </select>
             
             <div className="mt-3 flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-100">
@@ -338,7 +357,7 @@ function App() {
             </div>
           )}
           
-          {messages.map((m, i) => (
+          {messages.map((m) => (
             <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}>
              {/* <div className={`max-w-[90%] md:max-w-2xl p-4 rounded-2xl shadow-sm text-sm leading-relaxed
                 ${m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200'}`}>
