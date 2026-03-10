@@ -1,0 +1,131 @@
+# Configuration TEST - Modèles HuggingFace
+
+# Embedder
+embedder:
+  name: "sentence_transformers"
+  params:
+    model_name: "BAAI/bge-large-en-v1.5"
+    device: "cuda"        # GPU disponible sur ce poste
+    normalize_embeddings: true
+    batch_size: 32
+
+# Base de données vectorielle (locale)
+vector_store:
+  name: "chroma"
+  params:
+    collection_name: "documents"
+    persist_directory: "./data/chroma_db"
+    distance_metric: "cosine"
+
+# Retriever
+retriever:
+  name: "vector_retriever"
+  params:
+    search_type: "similarity"
+    score_threshold: 0.0
+    top_k: 5
+
+# Gestionnaire de prompts
+prompt_managers:
+  name: "default"
+  params: {}
+
+# MODÈLES HUGGINGFACE À TESTER
+
+# ------------------------------------------------------------
+# MODÈLE 1 : google/flan-t5-large
+# Points forts  : Très léger (~800MB), rapide, pas de GPU puissant requis
+# Points faibles : Réponses courtes, moins précis sur textes longs
+# Idéal pour    : Premier test rapide, machines peu puissantes
+# VRAM estimée  : ~2GB
+# Resulat       : Reponse vide apres test, il est donc incompatible avec le pipeline 
+# ------------------------------------------------------------
+# llm:
+#   name: "huggingface"
+#   params:
+#     model: "google/flan-t5-large"
+#     token: "${HF_TOKEN}"
+#     device: "cuda"
+#     temperature: 0.7
+#     max_tokens: 512
+#     top_p: 0.9
+#     enable_citations: false
+#     system_prompt_template: "rag_system"
+#     user_prompt_template: "rag_user"
+#     prevent_hallucinations: true
+
+
+
+# ------------------------------------------------------------
+# MODÈLE 2 : HuggingFaceH4/zephyr-7b-beta
+# Points forts  : Très bon pour RAG, suit bien les instructions
+# Points faibles : Lourd (~14GB VRAM)
+# Idéal pour    : Remplacer Mistral avec un modèle gratuit
+# VRAM estimée  : ~14GB
+# ------------------------------------------------------------
+llm:
+ name: "huggingface"
+ params:
+   model: "HuggingFaceH4/zephyr-7b-beta"
+   token: "${HF_TOKEN}"
+   device: "cuda"
+   temperature: 0.7
+   max_tokens: 1000
+   top_p: 0.9
+   enable_citations: false
+   system_prompt_template: "rag_system"
+   user_prompt_template: "rag_user"
+   prevent_hallucinations: true
+
+# ------------------------------------------------------------
+# MODÈLE 3 : mistralai/Mistral-7B-Instruct-v0.2
+# Points forts  : Excellent pour RAG, multilingue, rapide
+# Points faibles : Lourd (~14GB VRAM)
+# Idéal pour    : Meilleure qualité de réponse
+# VRAM estimée  : ~14GB
+# ------------------------------------------------------------
+#llm:
+#  name: "huggingface"
+#  params:
+#    model: "mistralai/Mistral-7B-Instruct-v0.2"
+#    token: "${HF_TOKEN}"
+#    device: "cuda"
+#    temperature: 0.7
+#    max_tokens: 1000
+#    top_p: 0.9
+#    enable_citations: false
+#    system_prompt_template: "rag_system"
+#    user_prompt_template: "rag_user"
+#    prevent_hallucinations: true
+
+# ------------------------------------------------------------
+# MODÈLE 4 : tiiuae/falcon-7b-instruct
+# Points forts  : Bon pour génération longue, multilingue
+# Points faibles : Plus lent que Mistral
+# Idéal pour    : Réponses détaillées
+# VRAM estimée  : ~14GB
+# ------------------------------------------------------------
+#llm:
+#  name: "huggingface"
+#  params:
+#    model: "tiiuae/falcon-7b-instruct"
+#    token: "${HF_TOKEN}"
+#    device: "cuda"
+#    temperature: 0.7
+#    max_tokens: 1000
+#    top_p: 0.9
+#    enable_citations: false
+#    system_prompt_template: "rag_system"
+#    user_prompt_template: "rag_user"
+#    prevent_hallucinations: true
+
+# Configuration du pipeline
+pipeline_config:
+  name: "huggingface_test_pipeline"
+  version: "1.0.0"
+  prompt_version: "1.0"
+  default_top_k: 5
+  default_rerank_top_k: 3
+  enable_caching: false   # Désactivé pour avoir des résultats frais
+  log_level: "DEBUG"      # DEBUG pour voir les détails pendant les tests
+
