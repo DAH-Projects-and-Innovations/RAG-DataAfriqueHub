@@ -2,7 +2,7 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 WORKDIR /app
 
 # Installation des outils pour les PDF et la base de données
-RUN apt-get update && apt-get install -y build-essential libmagic-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y build-essential libmagic-dev curl && rm -rf /var/lib/apt/lists/*
 
 # Installation de tes dépendances (ton environnement)
 COPY pyproject.toml uv.lock ./

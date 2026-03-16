@@ -178,11 +178,27 @@ docker compose up --build
 
 > Pinecone : créez un compte sur [pinecone.io](https://www.pinecone.io). L'index `rag-documents` est créé automatiquement au premier démarrage si `create_index_if_missing: true` est activé dans `premium.yaml`.
 
+### Accès après démarrage
+
+Une fois `docker compose up` terminé (attendre que le backend soit healthy) :
+
+| Service | URL |
+|---------|-----|
+| **Interface web** (chat + upload) | http://localhost:5173 |
+| **API backend** | http://localhost:8000 |
+| **Documentation Swagger** | http://localhost:8000/docs |
+| **Health check** | http://localhost:8000/health |
+
+> Le frontend peut mettre quelques secondes à s'afficher le temps que le backend passe l'état `healthy`. Si le navigateur affiche une erreur 502, attendez 10 secondes et rechargez.
+
 ### Commandes utiles
 
 ```bash
 # Voir les logs en temps réel
 docker compose logs -f
+
+# Vérifier l'état des containers
+docker compose ps
 
 # Arrêter sans supprimer les volumes (données conservées)
 docker compose stop

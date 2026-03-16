@@ -2,7 +2,10 @@ services:
 
   # ── Backend RAG ───────────────────────────────────────────────────────────
   backend-rag:
-    build: ./backend
+    build:
+      context: ./backend
+      platforms:
+        - linux/amd64
     ports:
       - "8000:8000"
     environment:
@@ -22,8 +25,8 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 60s
+      retries: 5
+      start_period: 120s
     networks:
       - rag_net
 
@@ -31,6 +34,8 @@ services:
   frontend-ui:
     build:
       context: ./frontend/rag-afrique-hub
+      platforms:
+        - linux/amd64
       args:
         # VITE_API_URL doit être l'URL que le NAVIGATEUR utilise pour atteindre le backend
         # En local : http://localhost:8000  |  En prod : https://api.votre-domaine.com
