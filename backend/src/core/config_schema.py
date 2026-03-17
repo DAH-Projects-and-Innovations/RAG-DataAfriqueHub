@@ -59,6 +59,7 @@ class PipelineConfigSchema(BaseModel):
     prompt_managers: ComponentConfig
 
     # Optionnels
+    chunker: Optional[ComponentConfig] = None
     reranker: Optional[ComponentConfig] = None
     query_rewriter: Optional[ComponentConfig] = None
 

@@ -15,6 +15,16 @@ vector_store:
     persist_directory: "./data/chroma_db"
     distance_metric: "cosine"
 
+# Chunker sémantique — regroupe les phrases par similarité de sens
+# Plus efficace que le découpage fixe sur des documents multilingues
+chunker:
+  name: "semantic_chunker"
+  params:
+    model_name: "BAAI/bge-large-en-v1.5"
+    breakpoint_threshold: 0.4
+    max_chunk_size: 1200
+    min_chunk_size: 100
+
 # Composant de récupération
 retriever:
   name: "vector_retriever"

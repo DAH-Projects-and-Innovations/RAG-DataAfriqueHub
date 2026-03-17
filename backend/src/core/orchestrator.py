@@ -22,6 +22,7 @@ class RAGPipeline:
         llm: ILLM,
         query_rewriter: Optional[IQueryRewriter] = None,
         reranker: Optional[IReranker] = None,
+        chunker: Optional[IChunker] = None,
         config: Optional[Dict[str, Any]] = None
     ):
         """
@@ -42,6 +43,7 @@ class RAGPipeline:
         self.llm = llm
         self.query_rewriter = query_rewriter
         self.reranker = reranker
+        self.chunker = chunker
         self.config = config or {}
         
         logger.info(f"Pipeline RAG initialisé avec: "

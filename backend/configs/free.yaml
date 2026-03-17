@@ -24,6 +24,13 @@ retriever:
     score_threshold: 0.0 # Seuil de similarité minimum (0-1)
     top_k: 20 # Nombre de documents à fetcher avant filtrage
 
+# Chunker (découpe des documents en morceaux)
+chunker:
+  name: "overlap_chunker"
+  params:
+    chunk_size: 800
+    chunk_overlap: 150
+
 # Reranking (optionnel, gratuit)
 reranker:
   name: "cross_encoder"

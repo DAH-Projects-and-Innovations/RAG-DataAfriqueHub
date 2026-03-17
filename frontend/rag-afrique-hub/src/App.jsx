@@ -48,6 +48,15 @@ function App() {
       });
   }, []);
 
+  // SOURCES ÉTENDUES — Set des IDs de messages dont on affiche toutes les sources
+  const [expandedSources, setExpandedSources] = useState(new Set());
+  const toggleSources = (id) =>
+    setExpandedSources(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
   // COPIER RÉPONSE
   const [copiedId, setCopiedId] = useState(null);
   const handleCopy = useCallback((id, content) => {
@@ -404,22 +413,34 @@ function App() {
                   )}
                 </div>
 
-                {/* Sources avec score */}
+                {/* Sources avec score et pagination */}
                 {m.sources && m.sources.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-1.5">
-                    {m.sources.map((source, idx) => {
-                      const score = source.metadata?.score ?? source.score;
-                      const pct = score != null ? Math.round(score * 100) : null;
-                      return (
-                        <div key={idx} className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-[9px] font-bold">
-                          <FileText size={9} />
-                          <span>{source.metadata?.filename || source.metadata?.source || "Source"}</span>
-                          {pct != null && (
-                            <span className="text-blue-400 font-normal">{pct}%</span>
-                          )}
-                        </div>
-                      );
-                    })}
+                  <div className="mt-3 pt-3 border-t border-slate-100">
+                    <div className="flex flex-wrap gap-1.5">
+                      {(expandedSources.has(m.id) ? m.sources : m.sources.slice(0, 3)).map((source, idx) => {
+                        const score = source.metadata?.score ?? source.score;
+                        const pct = score != null ? Math.round(score * 100) : null;
+                        return (
+                          <div key={idx} className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-[9px] font-bold">
+                            <FileText size={9} />
+                            <span>{source.metadata?.filename || source.metadata?.source || "Source"}</span>
+                            {pct != null && (
+                              <span className="text-blue-400 font-normal">{pct}%</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {m.sources.length > 3 && (
+                      <button
+                        onClick={() => toggleSources(m.id)}
+                        className="mt-1.5 text-[9px] text-blue-500 hover:text-blue-700 font-medium"
+                      >
+                        {expandedSources.has(m.id)
+                          ? "Voir moins"
+                          : `+${m.sources.length - 3} source${m.sources.length - 3 > 1 ? "s" : ""}`}
+                      </button>
+                    )}
                   </div>
                 )}
               </div> 
