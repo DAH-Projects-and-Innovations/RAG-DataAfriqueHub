@@ -53,7 +53,7 @@ function App() {
     setFilesToUpload(prev => prev.filter((_, i) => i !== index));
   };
 
-  const processIngestion = async () => {
+  /*const processIngestion = async () => {
     if (filesToUpload.length === 0) return;
     setIsUploading(true);
     let successCount = 0;
@@ -74,6 +74,44 @@ function App() {
       setFilesToUpload([]); 
     } catch (err) {
       Swal.fire({ title: 'Erreur', text: "Impossible d'indexer les documents.", icon: 'error' });
+    } finally {
+      setIsUploading(false);
+    }
+  };*/
+
+
+  const processIngestion = async () => {
+    if (filesToUpload.length === 0) return;
+    setIsUploading(true);
+    let successCount = 0;
+
+    try {
+      for (const file of filesToUpload) {
+        try {
+          const response = await apiService.uploadFile(file);
+          if (response && response.status === "success") {
+            setUploadedFiles(prev => [...prev, { name: file.name, size: file.size }]);
+            successCount++;
+          } 
+        } catch (fileErr) {
+          console.error(`Erreur pour le fichier ${file.name}:`, fileErr);
+          // On continue avec le fichier suivant même si celui-ci échoue
+        }
+      }
+
+      if (successCount > 0) {
+        Swal.fire({
+          title: 'Documents Indexés !',
+          text: `${successCount} fichiers ont été ajoutés.`,
+          icon: 'success',
+          confirmButtonColor: '#2563eb'
+        });
+        setFilesToUpload([]); 
+      } else {
+        Swal.fire({ title: 'Échec', text: "Aucun fichier n'a pu être indexé.", icon: 'warning' });
+      }
+    } catch (err) {
+       console.error("Erreur globale ingestion:", err);
     } finally {
       setIsUploading(false);
     }

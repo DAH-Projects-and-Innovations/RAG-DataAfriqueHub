@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export const apiService = {
   // Correspond à RAGPipeline.query()
@@ -44,7 +44,14 @@ export const apiService = {
     const formData = new FormData();
     formData.append("files", file);
     //  passer des paramètres au chunker via l'URL ou le body
-    const response = await axios.post(`${API_BASE_URL}/ingest`, formData);
+    const response = await axios.post(`${API_BASE_URL}/ingest`, formData,
+      // Optionnel : configurer les en-têtes si nécessaire (axios gère généralement le multipart automatiquement)
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
     return response.data;
   }
 };
