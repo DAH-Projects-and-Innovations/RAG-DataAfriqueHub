@@ -41,6 +41,7 @@ export const apiService = {
 
     const response = await axios.post(`${API_BASE_URL}/query`, payload, {
       headers: authHeaders(),
+      signal: config.signal,
     });
     return response.data;
   },

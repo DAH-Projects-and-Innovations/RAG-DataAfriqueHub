@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from pathlib import Path
+import re
 import shutil
 import uuid
 from typing import List
@@ -50,7 +51,9 @@ async def ingest_uploaded_files(
                 detail=f"{f.filename} dépasse la taille maximale autorisée ({MAX_FILE_BYTES // (1024*1024)} MB).",
             )
 
-        safe_name = f"{uuid.uuid4()}{suffix}"
+        # Conserver le nom original (sanitisé) — le dossier parent est déjà UUID-unique
+        original_stem = re.sub(r'[^\w\-]', '_', Path(f.filename).stem)
+        safe_name = f"{original_stem}{suffix}"
         file_path = upload_dir / safe_name
 
         try:

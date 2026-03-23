@@ -357,63 +357,106 @@ class OllamaLLM(BaseLLM):
 
 
 class HuggingFaceLLM(BaseLLM):
-    """LLM pour HuggingFace (modèles open-source)."""
-    
+    """
+    LLM pour HuggingFace.
+
+    - Si `api_key` est fourni  → utilise l'API Inference HuggingFace (serverless,
+      aucun téléchargement, modèle hébergé chez HF). Requiert HF_TOKEN.
+    - Si `api_key` est absent  → charge le modèle localement via `transformers`
+      (télécharge les poids la première fois, nécessite RAM/VRAM suffisante).
+    """
+
     def _initialize_client(self) -> None:
-        """Initialise le pipeline HuggingFace."""
-        if self._client is None:
+        if self._client is not None:
+            return
+
+        if self.config.api_key:
+            # Mode API Inference — aucun téléchargement de modèle
+            # provider="hf-inference" force l'utilisation de l'infra HF sans auto-routing
+            try:
+                from huggingface_hub import InferenceClient
+                self._client = InferenceClient(
+                    provider="hf-inference",
+                    token=self.config.api_key,
+                )
+                self._use_inference_api = True
+            except ImportError:
+                raise ImportError(
+                    "huggingface-hub package required. Install with: uv add huggingface-hub"
+                )
+        else:
+            # Mode local — télécharge et charge le modèle (peut être volumineux)
             try:
                 from transformers import pipeline
                 self._client = pipeline(
                     "text-generation",
                     model=self.config.model,
-                    device_map="auto"
+                    device_map="auto",
                 )
+                self._use_inference_api = False
             except ImportError:
                 raise ImportError(
-                    "transformers package required. Install with: pip install transformers torch"
+                    "transformers package required. Install with: uv add transformers torch"
                 )
-    
+
     def generate(
         self,
         messages: List[LLMMessage],
         **kwargs
     ) -> LLMResponse:
-        """Génère une réponse via HuggingFace."""
+        """Génère une réponse via l'API Inference HuggingFace ou en local."""
         self._initialize_client()
-        
-        # Formatter les messages en prompt
-        prompt = self._format_messages_to_prompt(messages)
-        
-        # Paramètres
+
         max_new_tokens = kwargs.get('max_tokens', self.config.max_tokens)
-        
-        # Générer
-        outputs = self._client(
-            prompt,
-            max_new_tokens=max_new_tokens,
-            temperature=kwargs.get('temperature', self.config.temperature),
-            top_p=kwargs.get('top_p', self.config.top_p),
-            do_sample=True,
-            return_full_text=False
-        )
-        
-        generated_text = outputs[0]['generated_text']
-        
-        return LLMResponse(
-            content=generated_text,
-            model=self.config.model,
-            usage={
-                'prompt_tokens': len(prompt.split()),
-                'completion_tokens': len(generated_text.split()),
-                'total_tokens': len(prompt.split()) + len(generated_text.split())
-            },
-            finish_reason='stop',
-            metadata={}
-        )
-    
+        temperature = kwargs.get('temperature', self.config.temperature)
+
+        if getattr(self, '_use_inference_api', False):
+            # -- API Inference (chat_completion) --
+            hf_messages = [{"role": m.role, "content": m.content} for m in messages]
+            response = self._client.chat_completion(
+                model=self.config.model,
+                messages=hf_messages,
+                max_tokens=max_new_tokens,
+                temperature=temperature,
+            )
+            generated_text = response.choices[0].message.content or ""
+            return LLMResponse(
+                content=generated_text,
+                model=self.config.model,
+                usage={
+                    'prompt_tokens': getattr(response.usage, 'prompt_tokens', 0),
+                    'completion_tokens': getattr(response.usage, 'completion_tokens', 0),
+                    'total_tokens': getattr(response.usage, 'total_tokens', 0),
+                },
+                finish_reason=response.choices[0].finish_reason or 'stop',
+                metadata={},
+            )
+        else:
+            # -- Inférence locale --
+            prompt = self._format_messages_to_prompt(messages)
+            outputs = self._client(
+                prompt,
+                max_new_tokens=max_new_tokens,
+                temperature=temperature,
+                top_p=kwargs.get('top_p', self.config.top_p),
+                do_sample=True,
+                return_full_text=False,
+            )
+            generated_text = outputs[0]['generated_text']
+            return LLMResponse(
+                content=generated_text,
+                model=self.config.model,
+                usage={
+                    'prompt_tokens': len(prompt.split()),
+                    'completion_tokens': len(generated_text.split()),
+                    'total_tokens': len(prompt.split()) + len(generated_text.split()),
+                },
+                finish_reason='stop',
+                metadata={},
+            )
+
     def _format_messages_to_prompt(self, messages: List[LLMMessage]) -> str:
-        """Formate les messages en prompt pour HuggingFace."""
+        """Formate les messages en prompt texte (mode local uniquement)."""
         prompt_parts = []
         for msg in messages:
             if msg.role == "system":
@@ -422,7 +465,6 @@ class HuggingFaceLLM(BaseLLM):
                 prompt_parts.append(f"User: {msg.content}")
             elif msg.role == "assistant":
                 prompt_parts.append(f"Assistant: {msg.content}")
-        
         prompt_parts.append("Assistant:")
         return "\n\n".join(prompt_parts)
 

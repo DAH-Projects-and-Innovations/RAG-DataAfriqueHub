@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Send, Upload, Database, ChevronLeft, ChevronRight, X, FileText, Play, Copy, Check } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Send, Square, Upload, Database, ChevronLeft, ChevronRight, X, FileText, Play, Copy, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Swal from 'sweetalert2';
@@ -105,17 +105,27 @@ function App() {
   };
 
 
-  const [streamingId, setStreamingId] = useState(null)
-  const textareaRef = React.useRef(null);
+  const [streamingId, setStreamingId] = useState(null);
+  const abortControllerRef = useRef(null);
+  const textareaRef = useRef(null);
 
   //  SAUVEGARDE AUTOMATIQUE 
   useEffect(() => {
-    localStorage.setItem('chat_history', JSON.stringify(messages));
+    localStorage.setItem('chat_history', JSON.stringify(messages.slice(-50)));
   }, [messages]);
 
   useEffect(() => {
     localStorage.setItem('indexed_files', JSON.stringify(uploadedFiles));
   }, [uploadedFiles]);
+
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsTyping(false);
+    setStreamingId(null);
+  };
 
   const handleSendMessage = async () => {
     if (!input.trim() || isTyping) return;
@@ -123,6 +133,7 @@ function App() {
     const userId = `user-${Date.now()}`;
     const assistantId = `assistant-${Date.now()}`;
     const currentInput = input;
+    abortControllerRef.current = new AbortController();
     // Ne conserver que le dernier message de l'assistant et le dernier message de l'utilisateur
     const historySnapshot = [];
     const rev = [...messages].slice().reverse();
@@ -144,6 +155,7 @@ function App() {
       const data = await apiService.askQuestion(currentInput, historySnapshot, {
         modelId: selectedModelId,
         useReranker: rerankEnabled,
+        signal: abortControllerRef.current?.signal,
       });
 
       // 3. Créer la bulle assistant VIDE
@@ -178,9 +190,15 @@ function App() {
       setStreamingId(null);
 
     } catch (err) {
-      console.error(err);
-      setError("Erreur de connexion.");
+      if (err.name === 'AbortError') {
+        // Annulation volontaire — pas d'erreur à afficher
+      } else {
+        console.error(err);
+        setError("Erreur de connexion.");
+      }
       setIsTyping(false);
+      setStreamingId(null);
+      abortControllerRef.current = null;
     }
   };
 
@@ -419,7 +437,7 @@ function App() {
                     <div className="flex flex-wrap gap-1.5">
                       {(expandedSources.has(m.id) ? m.sources : m.sources.slice(0, 3)).map((source, idx) => {
                         const score = source.metadata?.score ?? source.score;
-                        const pct = score != null ? Math.round(score * 100) : null;
+                        const pct = score != null ? Math.round(score) : null;
                         return (
                           <div key={idx} className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-[9px] font-bold">
                             <FileText size={9} />
@@ -479,13 +497,23 @@ function App() {
                 }
               }}
             />
-            <button 
-              onClick={handleSendMessage}
-              disabled={isTyping}
-              className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50"
-            >
-              <Send size={18} />
-            </button>
+            {isTyping ? (
+              <button
+                onClick={handleStop}
+                className="p-3 bg-red-500 text-white rounded-xl hover:bg-red-600 active:scale-95 transition-all"
+                title="Arrêter la génération"
+              >
+                <Square size={18} />
+              </button>
+            ) : (
+              <button
+                onClick={handleSendMessage}
+                disabled={!input.trim()}
+                className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50"
+              >
+                <Send size={18} />
+              </button>
+            )}
           </div>
         </footer>
       </main>
