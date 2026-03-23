@@ -19,8 +19,7 @@ SUPPORTED_EXTENSIONS = {f".{fmt}" for fmt in UnifiedDocumentLoader().get_support
 MAX_FILE_BYTES = 50 * 1024 * 1024
 
 BASE_UPLOAD_DIR = Path("data/uploads")
-INSTANCE_UPLOAD_DIR = BASE_UPLOAD_DIR / str(uuid.uuid4())
-INSTANCE_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+BASE_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @router.post("")
@@ -35,7 +34,9 @@ async def ingest_uploaded_files(
     if not files:
         raise HTTPException(status_code=400, detail="Aucun fichier envoyé.")
 
-    upload_dir = INSTANCE_UPLOAD_DIR
+    # Dossier temporaire unique par requête — supprimé après ingestion
+    upload_dir = BASE_UPLOAD_DIR / str(uuid.uuid4())
+    upload_dir.mkdir(parents=True, exist_ok=True)
     saved_files: List[str] = []
 
     for f in files:
@@ -51,9 +52,9 @@ async def ingest_uploaded_files(
                 detail=f"{f.filename} dépasse la taille maximale autorisée ({MAX_FILE_BYTES // (1024*1024)} MB).",
             )
 
-        # Conserver le nom original (sanitisé) — le dossier parent est déjà UUID-unique
-        original_stem = re.sub(r'[^\w\-]', '_', Path(f.filename).stem)
-        safe_name = f"{original_stem}{suffix}"
+        # Garder le nom original — on retire seulement les séparateurs de chemin (sécurité)
+        # Le dossier parent UUID garantit l'unicité, pas besoin de renommer
+        safe_name = Path(f.filename).name.replace("/", "_").replace("\\", "_")
         file_path = upload_dir / safe_name
 
         try:
@@ -92,6 +93,9 @@ async def ingest_uploaded_files(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'ingestion : {str(e)}")
+    finally:
+        # Supprimer le dossier temporaire — les chunks sont désormais dans ChromaDB
+        shutil.rmtree(upload_dir, ignore_errors=True)
 
     return {
         "status": "success",

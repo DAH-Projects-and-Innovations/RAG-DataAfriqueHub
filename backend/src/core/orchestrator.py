@@ -297,8 +297,8 @@ class RAGPipeline:
         try:
             # On utilise le vector_store pour supprimer les entrées.
             # La plupart des VectorStores (Chroma, Pinecone) utilisent un filtre 'where'
-            # On cible la métadonnée 'source' qui contient généralement le nom du fichier.
-            self.vector_store.delete(where={"source": filename})
+            # On filtre sur 'filename' (basename) — 'source' contient le chemin complet
+            self.vector_store.delete(where={"filename": filename})
             
             logger.info(f"Document {filename} supprimé avec succès du vector store")
             return True

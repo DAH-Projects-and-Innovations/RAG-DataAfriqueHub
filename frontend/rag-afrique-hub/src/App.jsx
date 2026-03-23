@@ -437,7 +437,7 @@ function App() {
                     <div className="flex flex-wrap gap-1.5">
                       {(expandedSources.has(m.id) ? m.sources : m.sources.slice(0, 3)).map((source, idx) => {
                         const score = source.metadata?.score ?? source.score;
-                        const pct = score != null ? Math.round(score) : null;
+                        const pct = score != null ? Math.round(score * 100) : null;
                         return (
                           <div key={idx} className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-[9px] font-bold">
                             <FileText size={9} />

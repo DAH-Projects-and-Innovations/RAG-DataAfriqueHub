@@ -31,7 +31,7 @@ def get_pipeline():
 
     # Choisir la configuration via la variable d'environnement RAG_CONFIG.
     # Valeurs acceptées : "free" | "hybrid"
-    config_name = os.getenv("RAG_CONFIG", "free").strip().lower()
+    config_name = os.getenv("RAG_CONFIG", "hybrid").strip().lower()
     config_path = f"configs/{config_name}.yaml"
 
     config = RAGPipelineFactory.load_config(config_path)
