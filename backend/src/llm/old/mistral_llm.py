@@ -81,7 +81,7 @@ class MistralLLM(ILLM):
         user_prompt = user_template.format(context_str=context_str, query=query)
         
         try:
-            response = self.client.chat.completions.create(
+            response = self.client.chat.complete(
                 model=self.model_name,
                 messages=[
                     {"role": "system", "content": system_prompt},

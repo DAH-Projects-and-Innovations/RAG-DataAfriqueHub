@@ -2,6 +2,7 @@
 Rerankers - Réordonne les documents par pertinence via des modèles de reranking.
 """
 
+import math
 from typing import List, Dict, Any, Optional
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -180,11 +181,10 @@ class CrossEncoderReranker(BaseReranker):
         """
         self._load_model()
         
-        # Le cross-encoder prend une paire (query, document)
-        score = self._model.predict([(query, document)])[0]
-        
-        # Convertir en float standard
-        return float(score)
+        # Le cross-encoder retourne des logits bruts (ex: -10 à +10)
+        # On applique sigmoid pour obtenir un score dans ]0, 1[
+        raw = float(self._model.predict([(query, document)])[0])
+        return 1.0 / (1.0 + math.exp(-raw))
     
     def rerank(
         self,

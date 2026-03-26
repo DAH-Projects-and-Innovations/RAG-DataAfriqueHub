@@ -5,13 +5,17 @@ from pathlib import Path
 from typing import Dict, Any, Type, Optional
 import logging
 
+from pydantic import ValidationError
+
 from .orchestrator import RAGPipeline
 from .interfaces import (
     IDocumentLoader, IChunker, IEmbedder, IVectorStore,
     IRetriever, IReranker, IQueryRewriter, ILLM
 )
+from .config_schema import PipelineConfigSchema
 
 from src.llm.prompt_manager import PromptManager
+from src.retrieval.reranker import RerankerConfig
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +78,20 @@ class RAGPipelineFactory:
         
         # Remplacement des variables d'environnement
         config = cls._replace_env_vars(config)
-        
+
+        # Validation du schéma avec Pydantic (erreur claire au démarrage)
+        try:
+            PipelineConfigSchema(**config)
+            logger.info("Validation du schéma de configuration réussie")
+        except ValidationError as exc:
+            errors = "\n".join(
+                f"  • {' → '.join(str(loc) for loc in e['loc'])}: {e['msg']}"
+                for e in exc.errors()
+            )
+            raise ValueError(
+                f"Configuration invalide dans '{config_path}':\n{errors}"
+            ) from exc
+
         logger.info(f"Configuration chargée depuis: {config_path}")
         return config
     
@@ -119,16 +136,26 @@ class RAGPipelineFactory:
         llm_config['params']['provider'] = llm_config['name'] # ex: 'ollama'
         llm = cls._create_component('llms', llm_config)
         
+        # Chunker optionnel (si absent, la route ingest utilisera ConfigurableChunker par défaut)
+        chunker = None
+        if 'chunker' in config:
+            chunker = cls._create_component('chunkers', config['chunker'])
+
         # Création des composants optionnels
         query_rewriter = None
         if 'query_rewriter' in config:
+            # Passer le LLM aux params du query_rewriter
+            config['query_rewriter']['params']['llm'] = llm
             query_rewriter = cls._create_component('query_rewriters', config['query_rewriter'])
         
         reranker = None
         if 'reranker' in config:
             reranker = cls._create_component('rerankers', config['reranker'])
         
-        # Création du pipeline
+        # Création du pipeline — on fusionne pipeline_config et models pour exposition via /models
+        pipeline_cfg = dict(config.get('pipeline_config', {}))
+        pipeline_cfg['models'] = config.get('models', [])
+
         pipeline = RAGPipeline(
             embedder=embedder,
             vector_store=vector_store,
@@ -136,9 +163,10 @@ class RAGPipelineFactory:
             llm=llm,
             query_rewriter=query_rewriter,
             reranker=reranker,
-            config=config.get('pipeline_config', {})
+            chunker=chunker,
+            config=pipeline_cfg,
         )
-        
+
         logger.info("Pipeline créé avec succès")
         return pipeline
     
@@ -156,7 +184,7 @@ class RAGPipelineFactory:
         """
         
         name = component_config['name']
-        params = component_config.get('params', {})
+        params = component_config.get('params', {}).copy()  # Copier pour ne pas modifier l'original
         
         if name not in cls._registry[component_type]:
             available = ', '.join(cls._registry[component_type].keys())
@@ -169,6 +197,12 @@ class RAGPipelineFactory:
         logger.debug(f"Création du composant: {component_type}/{name}")
         
         try:
+            # Gérer les rerankers spécialement pour convertir top_n en RerankerConfig
+            if component_type == 'rerankers':
+                top_n = params.pop('top_n', None)
+                if top_n is not None:
+                    params['config'] = RerankerConfig(top_k=top_n)
+            
             return component_class(**params)
         except Exception as e:
             logger.error(f"Erreur lors de la création de {component_type}/{name}: {e}")

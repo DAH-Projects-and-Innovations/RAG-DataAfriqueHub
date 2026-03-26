@@ -1,18 +1,17 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from src.api.schemas.request import QueryRequest
 from src.api.dependencies import get_pipeline
 
 router = APIRouter(prefix="/query", tags=["RAG"])
-print("📡 Query router ready")  # Log pour vérifier que le routeur est chargé
+logger = logging.getLogger(__name__)
 
 
 @router.post("")
-async def ask_question(req: QueryRequest, pipeline = Depends(get_pipeline)):
+async def ask_question(req: QueryRequest, pipeline=Depends(get_pipeline)):
     try:
-        print(f"Received query request: {req.dict()}")
-        # Appel du pipeline en transmettant l'historique de chat au LLM via `llm_params`
+        logger.info(f"Requête reçue: question='{req.question}' top_k={req.top_k}")
         llm_params = req.llm_params or {}
-        # Le frontend envoie `chat_history` sous forme de liste d'objets {role, content}
         if req.chat_history:
             llm_params = {**llm_params, 'conversation_history': req.chat_history}
 
@@ -23,9 +22,8 @@ async def ask_question(req: QueryRequest, pipeline = Depends(get_pipeline)):
             llm_params=llm_params
         )
 
-        # `response` est un `RAGResponse` — convertir en JSON simple
         return response.to_dict()
 
     except Exception as e:
-        print(f"Error during query processing: {str(e)}")
+        logger.error(f"Erreur lors du traitement de la requête: {e}")
         raise HTTPException(status_code=500, detail=f"Erreur Query: {str(e)}")

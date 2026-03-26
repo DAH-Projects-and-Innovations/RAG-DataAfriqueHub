@@ -7,6 +7,13 @@ embedder:
     normalize_embeddings: true
     batch_size: 32
 
+
+#embedder:
+#  name: "sentence_transformers"
+#  params:
+#    model_name: "all-MiniLM-L6-v2" # Beaucoup plus rapide et léger
+#    device: "cpu"
+
 # Base de données vectorielle (gratuite, locale)
 vector_store:
   name: "chroma"
@@ -38,7 +45,7 @@ prompt_managers:
   params: {}
 
 # Modèle de génération (Ollama local)
-#llm:
+# llm:
 #  name: "ollama"  # Ce nom sera utilisé comme 'provider'
 #  params:
 #    model: "llama3.1:8b"
@@ -55,19 +62,51 @@ prompt_managers:
 #    num_ctx: 4096
 #    repeat_penalty: 1.1
 
+#llm:
+# name: "huggingface"
+# params:
+#   model: "HuggingFaceH4/zephyr-7b-beta"
+#   api_key: "${HF_TOKEN}"
+#   temperature: 0.7
+#   max_tokens: 1000
+#   top_p: 0.9
+#   enable_citations: false
+#   system_prompt_template: "rag_system"
+#   user_prompt_template: "rag_user"
+#   prevent_hallucinations: true
+
+
 llm:
-  name: "mistral"  # Provider Mistral
+  name: "mistral"
   params:
-    model: "mistral-large-latest"  # ou "mistral-medium-latest", "mistral-small-latest"
-    api_key: "${MISTRAL_API_KEY}"  # Variable d'environnement
+    model: "mistral-small-latest"
+    api_key: "${MISTRAL_API_KEY}"
     temperature: 0.7
     max_tokens: 1000
     top_p: 0.9
-    # Paramètres RAG
     enable_citations: false
     system_prompt_template: "rag_system"
     user_prompt_template: "rag_user"
     prevent_hallucinations: true
+
+
+
+# Modèles disponibles — exposés via GET /models (utilisé par le frontend)
+#models:
+#  - id: "HuggingFaceH4/zephyr-7b-beta"
+#    label: "Zephyr 7B (HuggingFace)"
+#    provider: "huggingface"
+#    default: true
+
+
+models:
+  - id: "mistral-small-latest"
+    label: "Mistral Small (Cloud)"
+    provider: "mistral"
+    default: true
+  - id: "mistral-large-latest"
+    label: "Mistral Large (Cloud)"
+    provider: "mistral"
 
 # Configuration du pipeline
 pipeline_config:

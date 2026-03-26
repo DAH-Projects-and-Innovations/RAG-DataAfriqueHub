@@ -1,0 +1,57 @@
+services:
+
+  # ── Backend RAG ───────────────────────────────────────────────────────────
+  backend-rag:
+    build:
+      context: ./backend
+      platforms:
+        - linux/amd64
+    ports:
+      - "8000:8000"
+    environment:
+      # Mode actif : free | hybrid | premium
+      RAG_CONFIG: ${RAG_CONFIG:-hybrid}
+      # Clés API (selon le mode choisi dans .env)
+      HF_TOKEN: ${HF_TOKEN:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      COHERE_API_KEY: ${COHERE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+      # Authentification API optionnelle
+      API_KEY: ${API_KEY:-}
+    volumes:
+      - rag_data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - rag_net
+
+  # ── Frontend ──────────────────────────────────────────────────────────────
+  frontend-ui:
+    build:
+      context: ./frontend/rag-afrique-hub
+      platforms:
+        - linux/amd64
+      args:
+        # VITE_API_URL doit être l'URL que le NAVIGATEUR utilise pour atteindre le backend
+        # En local : http://localhost:8000  |  En prod : https://api.votre-domaine.com
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+        VITE_API_KEY: ${API_KEY:-}
+    ports:
+      - "5173:80"
+    depends_on:
+      backend-rag:
+        condition: service_healthy
+    networks:
+      - rag_net
+
+volumes:
+  rag_data:
+
+networks:
+  rag_net:
+    driver: bridge

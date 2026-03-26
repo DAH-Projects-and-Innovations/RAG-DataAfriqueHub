@@ -1,4 +1,4 @@
-# Modèle d'embedding (gratuit)
+# Modèle d'embedding (local, gratuit)
 embedder:
   name: "sentence_transformers"
   params:
@@ -7,7 +7,7 @@ embedder:
     normalize_embeddings: true
     batch_size: 32
 
-# Base de données vectorielle (gratuite, locale)
+# Base de données vectorielle (locale)
 vector_store:
   name: "chroma"
   params:
@@ -15,23 +15,26 @@ vector_store:
     persist_directory: "./data/chroma_db"
     distance_metric: "cosine"
 
+# Chunker sémantique — regroupe les phrases par similarité de sens
+# Plus efficace que le découpage fixe sur des documents multilingues
+chunker:
+  name: "semantic_chunker"
+  params:
+    model_name: "BAAI/bge-large-en-v1.5"
+    breakpoint_threshold: 0.4
+    max_chunk_size: 1200
+    min_chunk_size: 100
+
 # Composant de récupération
 retriever:
   name: "vector_retriever"
   params:
     search_type: "similarity"
     score_threshold: 0.3
-    fetch_k: 20
-
-# Query Rewriting (payant, optionnel mais recommandé)
-query_rewriter:
-  name: "llm_rewriter"
-  params:
-    num_variations: 3
-    temperature: 0.8
-    # Utilise le LLM défini ci-dessous
+    top_k: 20
 
 # Reranking (payant, très efficace)
+# Nécessite COHERE_API_KEY dans le .env
 reranker:
   name: "cohere"
   params:
@@ -39,28 +42,63 @@ reranker:
     model: "rerank-english-v3.0"  # ou "rerank-multilingual-v3.0"
     top_n: 5
 
-# Modèle de génération (payant, excellent rapport qualité/prix)
+# Gestionnaire de prompts
+prompt_managers:
+  name: "default"
+  params: {}
+
+# Modèle de génération (Mistral AI)
+# Obtenir une clé sur https://console.mistral.ai
 llm:
-  name: "openai"
+  name: "mistral"
   params:
-    api_key: "${OPENAI_API_KEY}"
-    model: "gpt-4o-mini"  # Bon compromis coût/performance
+    api_key: "${MISTRAL_API_KEY}"
+    model: "mistral-small-latest"
     temperature: 0.7
     max_tokens: 1500
     top_p: 0.95
-    frequency_penalty: 0.0
-    presence_penalty: 0.0
+
+# --- Gemini (commenter le bloc llm ci-dessus et décommenter celui-ci) ---
+# llm:
+#   name: "gemini"
+#   params:
+#     api_key: "${GOOGLE_API_KEY}"
+#     model: "gemini-1.5-flash-8b"
+#     temperature: 0.7
+#     max_tokens: 1500
+#     top_p: 0.95
+
+# Modèles disponibles — exposés via GET /models (utilisé par le frontend)
+models:
+  - id: "mistral-small-latest"
+    label: "Mistral Small (Mistral AI)"
+    provider: "mistral"
+    default: true
+  - id: "mistral-large-latest"
+    label: "Mistral Large (Mistral AI)"
+    provider: "mistral"
+    default: false
+
+# --- Modèles Gemini (si llm: gemini activé) ---
+# models:
+#   - id: "gemini-2.0-flash"
+#     label: "Gemini 2.0 Flash (Google)"
+#     provider: "gemini"
+#     default: true
+#   - id: "gemini-1.5-pro"
+#     label: "Gemini 1.5 Pro (Google)"
+#     provider: "gemini"
+#     default: false
 
 # Configuration du pipeline
 pipeline_config:
   name: "hybrid_rag_pipeline"
   version: "1.0.0"
-  default_top_k: 10  # On récupère plus de docs pour le reranking
-  default_rerank_top_k: 5  # On garde les 5 meilleurs après reranking
+  default_top_k: 10
+  default_rerank_top_k: 5
   enable_caching: true
   log_level: "INFO"
-  
+
   # Métriques estimées
   estimated_cost_per_query: 0.02  # USD
   expected_latency: 2  # secondes
-

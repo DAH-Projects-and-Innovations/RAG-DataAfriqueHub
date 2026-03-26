@@ -1,9 +1,12 @@
+import logging
 import os
 from typing import List
 from pypdf import PdfReader
 from langdetect import detect
 from src.core.interfaces import IDocumentLoader
 from src.core.models import Document
+
+logger = logging.getLogger(__name__)
 
 class UnifiedDocumentLoader(IDocumentLoader):
     def get_supported_formats(self) -> List[str]:
@@ -33,7 +36,7 @@ class UnifiedDocumentLoader(IDocumentLoader):
                         content = f.read()
             except Exception as e:
                 # Ignorer les fichiers qui posent problème mais continuer
-                print(f"Warning: cannot read {file_path}: {e}")
+                logger.warning(f"Impossible de lire {file_path}: {e}")
                 continue
 
             if not content or not content.strip():

@@ -3,9 +3,13 @@ from src.core.interfaces import IChunker
 from src.core.models import Document, Chunk
 
 class ConfigurableChunker(IChunker):
+    def __init__(self, chunk_size: int = 500, chunk_overlap: int = 50, **kwargs):
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
+
     def chunk(self, documents: List[Document], **kwargs) -> List[Chunk]:
-        size = kwargs.get('chunk_size', 500)
-        overlap = kwargs.get('chunk_overlap', 50)
+        size = kwargs.get('chunk_size', self.chunk_size)
+        overlap = kwargs.get('chunk_overlap', self.chunk_overlap)
         all_chunks = []
 
         for doc in documents:

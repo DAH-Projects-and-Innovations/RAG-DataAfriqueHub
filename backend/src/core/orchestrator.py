@@ -22,6 +22,7 @@ class RAGPipeline:
         llm: ILLM,
         query_rewriter: Optional[IQueryRewriter] = None,
         reranker: Optional[IReranker] = None,
+        chunker: Optional[IChunker] = None,
         config: Optional[Dict[str, Any]] = None
     ):
         """
@@ -42,6 +43,7 @@ class RAGPipeline:
         self.llm = llm
         self.query_rewriter = query_rewriter
         self.reranker = reranker
+        self.chunker = chunker
         self.config = config or {}
         
         logger.info(f"Pipeline RAG initialisé avec: "
@@ -160,26 +162,33 @@ class RAGPipeline:
             
         
         # Dédoublonnage
+        #seen_ids = set()
+        #unique_docs = []
+        #for doc in all_documents:
+        #    if doc.doc_id not in seen_ids:
+        #        seen_ids.add(doc.doc_id)
+        #        unique_docs.append(doc)
+
+
         seen_ids = set()
         unique_docs = []
+
         for doc in all_documents:
-            if doc.doc_id not in seen_ids:
-                seen_ids.add(doc.doc_id)
+            doc_id = getattr(doc, "chunk_id", None) or getattr(doc, "id", None)
+
+            if doc_id not in seen_ids:
+                seen_ids.add(doc_id)
                 unique_docs.append(doc)
-        
+    
         logger.info(f"{len(unique_docs)} documents uniques récupérés")
         metadata['steps'].append({'step': 'retrieval', 'num_docs': len(unique_docs)})
+
+
 
         # 4. Reranking (optionnel)
         if self.reranker and unique_docs:
             try:
                 rerank_k = rerank_top_k or top_k
-                #unique_docs = self.reranker.rerank(
-                #    query_text, 
-                #    unique_docs, 
-                #    top_k=rerank_k,
-                #    **kwargs.get('reranker_params', {})
-                #)
                 query_obj = Query(text=query_text)
                 unique_docs = self.reranker.rerank(
                     query_obj,
@@ -301,8 +310,8 @@ class RAGPipeline:
         try:
             # On utilise le vector_store pour supprimer les entrées.
             # La plupart des VectorStores (Chroma, Pinecone) utilisent un filtre 'where'
-            # On cible la métadonnée 'source' qui contient généralement le nom du fichier.
-            self.vector_store.delete(where={"source": filename})
+            # On filtre sur 'filename' (basename) — 'source' contient le chemin complet
+            self.vector_store.delete(where={"filename": filename})
             
             logger.info(f"Document {filename} supprimé avec succès du vector store")
             return True
