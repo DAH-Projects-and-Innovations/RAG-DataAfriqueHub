@@ -68,6 +68,28 @@ class FAISSVectorStore(IVectorStore):
                 results.append(self.chunks_map[idx])
         return results
 
+    def delete(self, where: Dict[str, Any]) -> None:
+        """
+        Supprime les chunks dont les métadonnées correspondent aux filtres.
+        FAISS ne supporte pas la suppression native ; on filtre via chunks_map.
+
+        Args:
+            where: Filtres metadata (ex: {"filename": "rapport.pdf"})
+        """
+        if not where:
+            raise ValueError("Un filtre 'where' non vide est requis.")
+
+        indices_to_remove = [
+            idx for idx, chunk in self.chunks_map.items()
+            if all(chunk.metadata.get(k) == v for k, v in where.items())
+        ]
+        for idx in indices_to_remove:
+            del self.chunks_map[idx]
+
+        if indices_to_remove:
+            with open(self.map_path, 'wb') as f:
+                pickle.dump(self.chunks_map, f)
+
     def delete_collection(self, collection_name: str) -> None:
         if os.path.exists(self.index_path):
             os.remove(self.index_path)

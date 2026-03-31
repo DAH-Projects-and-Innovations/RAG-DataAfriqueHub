@@ -1,22 +1,35 @@
-# Modèle d'embedding (payant, meilleur qualité)
+# ══════════════════════════════════════════════════════════════════════
+# Mode PREMIUM — OpenAI + Pinecone + Cohere
+# Requiert : OPENAI_API_KEY, COHERE_API_KEY, PINECONE_API_KEY
+# ══════════════════════════════════════════════════════════════════════
+
+# Modèle d'embedding (OpenAI, haute qualité, 3072 dimensions)
 embedder:
   name: "openai"
   params:
     api_key: "${OPENAI_API_KEY}"
-    model: "text-embedding-3-large"  # 3072 dimensions
-    dimensions: 3072  # Optionnel: réduire si besoin
+    model: "text-embedding-3-large"
+    dimensions: 3072
 
-# Base de données vectorielle (payante, managed, scalable)
+# Base de données vectorielle (Pinecone, managée, scalable)
 vector_store:
   name: "pinecone"
   params:
     api_key: "${PINECONE_API_KEY}"
     environment: "${PINECONE_ENVIRONMENT}"
     index_name: "rag-documents"
-    dimension: 3072  # Doit correspondre à l'embedder
+    dimension: 3072
     metric: "cosine"
-    # Configuration du pod
-    pod_type: "p1.x1"  # ou "s1.x1" pour starter
+    create_index_if_missing: true
+
+# Chunker sémantique — regroupe les phrases par similarité de sens
+chunker:
+  name: "semantic_chunker"
+  params:
+    model_name: "BAAI/bge-large-en-v1.5"
+    breakpoint_threshold: 0.35
+    max_chunk_size: 1400
+    min_chunk_size: 100
 
 # Composant de récupération
 retriever:
@@ -24,47 +37,44 @@ retriever:
   params:
     search_type: "similarity"
     score_threshold: 0.5
-    fetch_k: 20
-    # Métadonnées pour filtrage
-    include_metadata: true
+    top_k: 20
 
-# Query Rewriting (avec GPT-4)
-query_rewriter:
-  name: "llm_rewriter"
-  params:
-    num_variations: 3
-    temperature: 0.8
-    use_gpt4: true  # Utilise GPT-4 pour rewriting
-
-# Reranking (Cohere, le meilleur)
+# Reranking Cohere (meilleure qualité)
 reranker:
   name: "cohere"
   params:
     api_key: "${COHERE_API_KEY}"
     model: "rerank-english-v3.0"
     top_n: 5
-    return_documents: true
 
-# Modèle de génération (GPT-4 ou Claude Opus)
+# Gestionnaire de prompts
+prompt_managers:
+  name: "default"
+  params: {}
+
+# Modèle de génération (GPT-4o)
 llm:
   name: "openai"
   params:
     api_key: "${OPENAI_API_KEY}"
-    model: "gpt-4"  # ou "gpt-4-turbo" pour plus de rapidité
+    model: "gpt-4o"
     temperature: 0.7
     max_tokens: 2000
-    top_p: 0.95
-    frequency_penalty: 0.0
-    presence_penalty: 0.0
 
-# Alternative: Claude Opus (décommenter pour utiliser)
-# llm:
-#   name: "anthropic"
-#   params:
-#     api_key: "${ANTHROPIC_API_KEY}"
-#     model: "claude-opus-4-5-20251101"
-#     temperature: 0.7
-#     max_tokens: 2000
+# Modèles disponibles — exposés via GET /models (utilisé par le frontend)
+models:
+  - id: "gpt-4o"
+    label: "GPT-4o (OpenAI)"
+    provider: "openai"
+    default: true
+  - id: "gpt-4-turbo"
+    label: "GPT-4 Turbo (OpenAI)"
+    provider: "openai"
+    default: false
+  - id: "gpt-3.5-turbo"
+    label: "GPT-3.5 Turbo (OpenAI)"
+    provider: "openai"
+    default: false
 
 # Configuration du pipeline
 pipeline_config:
@@ -74,14 +84,7 @@ pipeline_config:
   default_rerank_top_k: 5
   enable_caching: true
   log_level: "INFO"
-  
-  # Optimisations
-  use_async: true
-  parallel_queries: true
-  cache_ttl: 3600  # 1 heure
-  
+
   # Métriques estimées
   estimated_cost_per_query: 0.10  # USD
-  expected_latency: 1.5  # secondes
-
-
+  expected_latency: 1.5           # secondes

@@ -3,12 +3,33 @@ Intégration de l'abstraction LLM (Tâche 4) avec l'interface ILLM (Tâche 1).
 Adaptateur pour connecter les deux systèmes.
 """
 
+import logging
 from typing import List, Dict, Any, Optional
+
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception,
+    before_sleep_log,
+)
+
 from ..core.interfaces import ILLM
 from ..core.models import Document
 from ..llm.base_llm import BaseLLM, LLMMessage
 from ..llm.prompt_manager import PromptManager
 from ..rag.models import RAGConfig
+
+logger = logging.getLogger(__name__)
+
+
+def _is_retryable_error(exc: Exception) -> bool:
+    """Retourne True pour les erreurs transitoires (rate limit, quota, timeout)."""
+    msg = str(exc).lower()
+    return any(k in msg for k in (
+        "429", "rate limit", "rate_limit", "quota", "resource_exhausted",
+        "too many requests", "503", "service unavailable", "timeout",
+    ))
 
 
 class LLMAdapter(ILLM):
@@ -37,25 +58,34 @@ class LLMAdapter(ILLM):
         self.prompt_manager = prompt_manager
         self.config = config or RAGConfig()
     
+    @retry(
+        retry=retry_if_exception(_is_retryable_error),
+        stop=stop_after_attempt(4),
+        wait=wait_exponential(multiplier=2, min=5, max=60),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+        reraise=True,
+    )
+    def _call_llm(self, messages: List[LLMMessage], **kwargs):
+        """Appelle le LLM avec retry exponentiel sur les erreurs transitoires (429, 503…)."""
+        return self.llm.generate(
+            messages=messages,
+            temperature=kwargs.get("temperature", self.config.default_temperature),
+            max_tokens=kwargs.get("max_tokens", self.config.default_max_tokens),
+        )
+
     def generate(self, prompt: str, **kwargs) -> str:
         """
         Génère une réponse à partir d'un prompt (interface ILLM).
-        
+
         Args:
             prompt: Prompt d'entrée
             **kwargs: Paramètres de génération
-            
+
         Returns:
             Texte généré
         """
         messages = [LLMMessage(role="user", content=prompt)]
-        
-        response = self.llm.generate(
-            messages=messages,
-            temperature=kwargs.get('temperature', self.config.default_temperature),
-            max_tokens=kwargs.get('max_tokens', self.config.default_max_tokens)
-        )
-        
+        response = self._call_llm(messages, **kwargs)
         return response.content
     
     def generate_with_context(
@@ -127,13 +157,8 @@ class LLMAdapter(ILLM):
         # Enfin, ajouter le prompt utilisateur actuel
         messages.append(LLMMessage(role="user", content=user_prompt))
         
-        # Générer la réponse
-        response = self.llm.generate(
-            messages=messages,
-            temperature=kwargs.get('temperature', self.config.default_temperature),
-            max_tokens=kwargs.get('max_tokens', self.config.default_max_tokens)
-        )
-        
+        # Générer la réponse (avec retry automatique sur 429/503)
+        response = self._call_llm(messages, **kwargs)
         return response.content
     
     def _format_sources(self, documents: List[Document], include_citations: bool = True) -> str:

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Send, Upload, Database, ChevronLeft, ChevronRight, X, FileText, Play, Copy, Check } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Send, Square, Upload, Database, ChevronLeft, ChevronRight, X, FileText, Play, Copy, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Swal from 'sweetalert2';
@@ -29,8 +29,33 @@ function App() {
   const [isUploading, setIsUploading] = useState(false);
 
   // CONFIGURATION RAG
-  const [selectedModel, setSelectedModel] = useState('Gemini 1.5 Flash');
+  const [availableModels, setAvailableModels] = useState([]);
+  const [selectedModelId, setSelectedModelId] = useState('');
   const [rerankEnabled, setRerankEnabled] = useState(true);
+
+  // Chargement des modèles disponibles depuis le backend au montage
+  useEffect(() => {
+    apiService.getModels()
+      .then((models) => {
+        setAvailableModels(models);
+        const defaultModel = models.find(m => m.default) || models[0];
+        if (defaultModel) setSelectedModelId(defaultModel.id);
+      })
+      .catch(() => {
+        // Fallback si le backend n'est pas encore disponible
+        setAvailableModels([{ id: 'default', label: 'Modèle par défaut', default: true }]);
+        setSelectedModelId('default');
+      });
+  }, []);
+
+  // SOURCES ÉTENDUES — Set des IDs de messages dont on affiche toutes les sources
+  const [expandedSources, setExpandedSources] = useState(new Set());
+  const toggleSources = (id) =>
+    setExpandedSources(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
 
   // COPIER RÉPONSE
   const [copiedId, setCopiedId] = useState(null);
@@ -118,17 +143,27 @@ function App() {
   };
 
 
-  const [streamingId, setStreamingId] = useState(null)
-  const textareaRef = React.useRef(null);
+  const [streamingId, setStreamingId] = useState(null);
+  const abortControllerRef = useRef(null);
+  const textareaRef = useRef(null);
 
   //  SAUVEGARDE AUTOMATIQUE 
   useEffect(() => {
-    localStorage.setItem('chat_history', JSON.stringify(messages));
+    localStorage.setItem('chat_history', JSON.stringify(messages.slice(-50)));
   }, [messages]);
 
   useEffect(() => {
     localStorage.setItem('indexed_files', JSON.stringify(uploadedFiles));
   }, [uploadedFiles]);
+
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsTyping(false);
+    setStreamingId(null);
+  };
 
   const handleSendMessage = async () => {
     if (!input.trim() || isTyping) return;
@@ -136,6 +171,7 @@ function App() {
     const userId = `user-${Date.now()}`;
     const assistantId = `assistant-${Date.now()}`;
     const currentInput = input;
+    abortControllerRef.current = new AbortController();
     // Ne conserver que le dernier message de l'assistant et le dernier message de l'utilisateur
     const historySnapshot = [];
     const rev = [...messages].slice().reverse();
@@ -155,8 +191,9 @@ function App() {
 
     try {
       const data = await apiService.askQuestion(currentInput, historySnapshot, {
-        model: selectedModel,
-        useReranker: rerankEnabled
+        modelId: selectedModelId,
+        useReranker: rerankEnabled,
+        signal: abortControllerRef.current?.signal,
       });
 
       // 3. Créer la bulle assistant VIDE
@@ -191,9 +228,15 @@ function App() {
       setStreamingId(null);
 
     } catch (err) {
-      console.error(err);
-      setError("Erreur de connexion.");
+      if (err.name === 'AbortError') {
+        // Annulation volontaire — pas d'erreur à afficher
+      } else {
+        console.error(err);
+        setError("Erreur de connexion.");
+      }
       setIsTyping(false);
+      setStreamingId(null);
+      abortControllerRef.current = null;
     }
   };
 
@@ -327,15 +370,18 @@ function App() {
           {/* CONFIGURATION */}
           <div className="pt-4 border-t border-slate-100">
             <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Modèle IA</h3>
-            <select 
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xm  focus:ring-2 focus:ring-blue-500 outline-none"
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
+            <select
+              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              value={selectedModelId}
+              onChange={(e) => setSelectedModelId(e.target.value)}
+              disabled={availableModels.length === 0}
             >
-              <option value="Gemini 1.5 Flash">Gemini 1.5 Flash</option>
-              <option value="GPT-4o-mini">GPT-4o-mini</option>
-              <option value="Ollama-Llama3">Llama 3 (Local)</option>
-              <option value="Mistral-7B">Mistral 7B (Local/Gratuit)</option>
+              {availableModels.length === 0 && (
+                <option value="">Chargement…</option>
+              )}
+              {availableModels.map((m) => (
+                <option key={m.id} value={m.id}>{m.label}</option>
+              ))}
             </select>
             
             <div className="mt-3 flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-100">
@@ -376,7 +422,7 @@ function App() {
             </div>
           )}
           
-          {messages.map((m, i) => (
+          {messages.map((m) => (
             <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}>
              {/* <div className={`max-w-[90%] md:max-w-2xl p-4 rounded-2xl shadow-sm text-sm leading-relaxed
                 ${m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200'}`}>
@@ -423,22 +469,34 @@ function App() {
                   )}
                 </div>
 
-                {/* Sources avec score */}
+                {/* Sources avec score et pagination */}
                 {m.sources && m.sources.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-1.5">
-                    {m.sources.map((source, idx) => {
-                      const score = source.metadata?.score ?? source.score;
-                      const pct = score != null ? Math.round(score * 100) : null;
-                      return (
-                        <div key={idx} className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-[9px] font-bold">
-                          <FileText size={9} />
-                          <span>{source.metadata?.filename || source.metadata?.source || "Source"}</span>
-                          {pct != null && (
-                            <span className="text-blue-400 font-normal">{pct}%</span>
-                          )}
-                        </div>
-                      );
-                    })}
+                  <div className="mt-3 pt-3 border-t border-slate-100">
+                    <div className="flex flex-wrap gap-1.5">
+                      {(expandedSources.has(m.id) ? m.sources : m.sources.slice(0, 3)).map((source, idx) => {
+                        const score = source.metadata?.score ?? source.score;
+                        const pct = score != null ? Math.round(score * 100) : null;
+                        return (
+                          <div key={idx} className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-[9px] font-bold">
+                            <FileText size={9} />
+                            <span>{source.metadata?.filename || source.metadata?.source || "Source"}</span>
+                            {pct != null && (
+                              <span className="text-blue-400 font-normal">{pct}%</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {m.sources.length > 3 && (
+                      <button
+                        onClick={() => toggleSources(m.id)}
+                        className="mt-1.5 text-[9px] text-blue-500 hover:text-blue-700 font-medium"
+                      >
+                        {expandedSources.has(m.id)
+                          ? "Voir moins"
+                          : `+${m.sources.length - 3} source${m.sources.length - 3 > 1 ? "s" : ""}`}
+                      </button>
+                    )}
                   </div>
                 )}
               </div> 
@@ -477,13 +535,23 @@ function App() {
                 }
               }}
             />
-            <button 
-              onClick={handleSendMessage}
-              disabled={isTyping}
-              className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50"
-            >
-              <Send size={18} />
-            </button>
+            {isTyping ? (
+              <button
+                onClick={handleStop}
+                className="p-3 bg-red-500 text-white rounded-xl hover:bg-red-600 active:scale-95 transition-all"
+                title="Arrêter la génération"
+              >
+                <Square size={18} />
+              </button>
+            ) : (
+              <button
+                onClick={handleSendMessage}
+                disabled={!input.trim()}
+                className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50"
+              >
+                <Send size={18} />
+              </button>
+            )}
           </div>
         </footer>
       </main>

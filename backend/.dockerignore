@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual env
+venv/
+.venv/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data volumineuse RAG
+data/
+vectorstore/
+chroma_db/
+
+# Tests
+tests/
+
+# Node (si jamais)
+node_modules/

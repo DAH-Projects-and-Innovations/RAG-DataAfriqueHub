@@ -26,6 +26,10 @@ Composants principaux:
     - IDocumentLoader, IChunker, IEmbedder, etc.: Interfaces abstraites
 """
 
+import os
+import sys
+from pathlib import Path
+
 __version__ = "1.0.0"
 __author__ = "Dobé Nancy"
 __license__ = "MIT"
@@ -152,28 +156,6 @@ def setup_logging(level: str = "INFO"):
     print(f"✅ Logging configuré au niveau: {level}")
 
 
-# Message de bienvenue lors de l'import
-def _welcome_message():
-    """Affiche un message de bienvenue"""
-    print(f"""
-╔═══════════════════════════════════════════════════════════╗
-║        Architecture RAG Modulaire v{__version__}                  ║
-║                                                           ║
-║  Démarrage rapide:                                        ║
-║    >>> from src import quick_start                        ║
-║    >>> pipeline = quick_start()                           ║
-║                                                           ║
-║  Documentation: voir README.md                            ║
-╚═══════════════════════════════════════════════════════════╝
-    """)
-
-
-# Afficher le message seulement si pas en mode import silencieux
-import os
-if os.getenv('RAG_SILENT_IMPORT') != '1':
-    _welcome_message()
-
-
 # ==========================================
 # Configuration par défaut
 # ==========================================
@@ -253,7 +235,6 @@ def validate_environment():
     }
     
     # Vérifier la version Python
-    import sys
     if sys.version_info < (3, 8):
         results['python_version'] = False
         results['recommendations'].append("Python 3.8+ requis")
@@ -299,10 +280,6 @@ def print_validation_report():
         print("\n  ✅ Environnement prêt!")
 
 
-# ==========================================
-# Helpers pour le développement
-# ==========================================
-
 def create_sample_documents(output_dir: str = './data/documents'):
     """
     Crée des documents d'exemple pour tester le pipeline
@@ -310,9 +287,6 @@ def create_sample_documents(output_dir: str = './data/documents'):
     Args:
         output_dir: Répertoire de sortie
     """
-    import os
-    from pathlib import Path
-    
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     
     samples = {
@@ -340,9 +314,8 @@ def create_sample_documents(output_dir: str = './data/documents'):
     }
     
     for filename, content in samples.items():
-        filepath = os.path.join(output_dir, filename)
-        with open(filepath, 'w', encoding='utf-8') as f:
-            f.write(content.strip())
+        filepath = Path(output_dir) / filename
+        filepath.write_text(content.strip(), encoding='utf-8')
     
     print(f"✅ {len(samples)} documents d'exemple créés dans {output_dir}")
 

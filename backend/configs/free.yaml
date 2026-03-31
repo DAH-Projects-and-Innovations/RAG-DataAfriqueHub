@@ -24,6 +24,13 @@ retriever:
     score_threshold: 0.0 # Seuil de similarité minimum (0-1)
     top_k: 20 # Nombre de documents à fetcher avant filtrage
 
+# Chunker (découpe des documents en morceaux)
+chunker:
+  name: "overlap_chunker"
+  params:
+    chunk_size: 800
+    chunk_overlap: 150
+
 # Reranking (optionnel, gratuit)
 reranker:
   name: "cross_encoder"
@@ -38,7 +45,7 @@ prompt_managers:
   params: {}
 
 # Modèle de génération (Ollama local)
-#llm:
+# llm:
 #  name: "ollama"  # Ce nom sera utilisé comme 'provider'
 #  params:
 #    model: "llama3.1:8b"
@@ -56,18 +63,24 @@ prompt_managers:
 #    repeat_penalty: 1.1
 
 llm:
-  name: "mistral"  # Provider Mistral
-  params:
-    model: "mistral-large-latest"  # ou "mistral-medium-latest", "mistral-small-latest"
-    api_key: "${MISTRAL_API_KEY}"  # Variable d'environnement
-    temperature: 0.7
-    max_tokens: 1000
-    top_p: 0.9
-    # Paramètres RAG
-    enable_citations: false
-    system_prompt_template: "rag_system"
-    user_prompt_template: "rag_user"
-    prevent_hallucinations: true
+ name: "huggingface"
+ params:
+   model: "HuggingFaceH4/zephyr-7b-beta"
+   api_key: "${HF_TOKEN}"
+   temperature: 0.7
+   max_tokens: 1000
+   top_p: 0.9
+   enable_citations: false
+   system_prompt_template: "rag_system"
+   user_prompt_template: "rag_user"
+   prevent_hallucinations: true
+
+# Modèles disponibles — exposés via GET /models (utilisé par le frontend)
+models:
+  - id: "HuggingFaceH4/zephyr-7b-beta"
+    label: "Zephyr 7B (HuggingFace)"
+    provider: "huggingface"
+    default: true
 
 # Configuration du pipeline
 pipeline_config:

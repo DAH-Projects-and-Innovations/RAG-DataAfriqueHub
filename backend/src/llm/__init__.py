@@ -26,6 +26,8 @@ from .base_llm import (
     AnthropicLLM,
     OllamaLLM,
     HuggingFaceLLM,
+    MistralLLM,
+    GeminiLLM,
     create_llm
 )
 
@@ -50,11 +52,15 @@ __all__ = [
     'LLMResponse',
     'LLMProvider',
     
+    
     # Providers
     'OpenAILLM',
     'AnthropicLLM',
     'OllamaLLM',
     'HuggingFaceLLM',
+    'MistralLLM',
+    'GeminiLLM',
+
     
     # Factory
     'create_llm',

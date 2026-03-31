@@ -22,6 +22,8 @@ class LLMProvider(Enum):
     OLLAMA = "ollama"
     HUGGINGFACE = "huggingface"
     MISTRAL = "mistral"
+    GEMINI = "gemini"
+    
 
 
 @dataclass
@@ -32,6 +34,7 @@ class LLMConfig:
     temperature: float = 0.7
     max_tokens: int = 1000
     top_p: float = 1.0
+    top_k: int = 0  # 0 means no limit
     frequency_penalty: float = 0.0
     presence_penalty: float = 0.0
     api_key: Optional[str] = None
@@ -52,6 +55,7 @@ class LLMConfig:
             'temperature': self.temperature,
             'max_tokens': self.max_tokens,
             'top_p': self.top_p,
+            'top_k': self.top_k,
             'frequency_penalty': self.frequency_penalty,
             'presence_penalty': self.presence_penalty,
             'stream': self.stream,
@@ -353,63 +357,106 @@ class OllamaLLM(BaseLLM):
 
 
 class HuggingFaceLLM(BaseLLM):
-    """LLM pour HuggingFace (modèles open-source)."""
-    
+    """
+    LLM pour HuggingFace.
+
+    - Si `api_key` est fourni  → utilise l'API Inference HuggingFace (serverless,
+      aucun téléchargement, modèle hébergé chez HF). Requiert HF_TOKEN.
+    - Si `api_key` est absent  → charge le modèle localement via `transformers`
+      (télécharge les poids la première fois, nécessite RAM/VRAM suffisante).
+    """
+
     def _initialize_client(self) -> None:
-        """Initialise le pipeline HuggingFace."""
-        if self._client is None:
+        if self._client is not None:
+            return
+
+        if self.config.api_key:
+            # Mode API Inference — aucun téléchargement de modèle
+            # provider="hf-inference" force l'utilisation de l'infra HF sans auto-routing
+            try:
+                from huggingface_hub import InferenceClient
+                self._client = InferenceClient(
+                    provider="hf-inference",
+                    token=self.config.api_key,
+                )
+                self._use_inference_api = True
+            except ImportError:
+                raise ImportError(
+                    "huggingface-hub package required. Install with: uv add huggingface-hub"
+                )
+        else:
+            # Mode local — télécharge et charge le modèle (peut être volumineux)
             try:
                 from transformers import pipeline
                 self._client = pipeline(
                     "text-generation",
                     model=self.config.model,
-                    device_map="auto"
+                    device_map="auto",
                 )
+                self._use_inference_api = False
             except ImportError:
                 raise ImportError(
-                    "transformers package required. Install with: pip install transformers torch"
+                    "transformers package required. Install with: uv add transformers torch"
                 )
-    
+
     def generate(
         self,
         messages: List[LLMMessage],
         **kwargs
     ) -> LLMResponse:
-        """Génère une réponse via HuggingFace."""
+        """Génère une réponse via l'API Inference HuggingFace ou en local."""
         self._initialize_client()
-        
-        # Formatter les messages en prompt
-        prompt = self._format_messages_to_prompt(messages)
-        
-        # Paramètres
+
         max_new_tokens = kwargs.get('max_tokens', self.config.max_tokens)
-        
-        # Générer
-        outputs = self._client(
-            prompt,
-            max_new_tokens=max_new_tokens,
-            temperature=kwargs.get('temperature', self.config.temperature),
-            top_p=kwargs.get('top_p', self.config.top_p),
-            do_sample=True,
-            return_full_text=False
-        )
-        
-        generated_text = outputs[0]['generated_text']
-        
-        return LLMResponse(
-            content=generated_text,
-            model=self.config.model,
-            usage={
-                'prompt_tokens': len(prompt.split()),
-                'completion_tokens': len(generated_text.split()),
-                'total_tokens': len(prompt.split()) + len(generated_text.split())
-            },
-            finish_reason='stop',
-            metadata={}
-        )
-    
+        temperature = kwargs.get('temperature', self.config.temperature)
+
+        if getattr(self, '_use_inference_api', False):
+            # -- API Inference (chat_completion) --
+            hf_messages = [{"role": m.role, "content": m.content} for m in messages]
+            response = self._client.chat_completion(
+                model=self.config.model,
+                messages=hf_messages,
+                max_tokens=max_new_tokens,
+                temperature=temperature,
+            )
+            generated_text = response.choices[0].message.content or ""
+            return LLMResponse(
+                content=generated_text,
+                model=self.config.model,
+                usage={
+                    'prompt_tokens': getattr(response.usage, 'prompt_tokens', 0),
+                    'completion_tokens': getattr(response.usage, 'completion_tokens', 0),
+                    'total_tokens': getattr(response.usage, 'total_tokens', 0),
+                },
+                finish_reason=response.choices[0].finish_reason or 'stop',
+                metadata={},
+            )
+        else:
+            # -- Inférence locale --
+            prompt = self._format_messages_to_prompt(messages)
+            outputs = self._client(
+                prompt,
+                max_new_tokens=max_new_tokens,
+                temperature=temperature,
+                top_p=kwargs.get('top_p', self.config.top_p),
+                do_sample=True,
+                return_full_text=False,
+            )
+            generated_text = outputs[0]['generated_text']
+            return LLMResponse(
+                content=generated_text,
+                model=self.config.model,
+                usage={
+                    'prompt_tokens': len(prompt.split()),
+                    'completion_tokens': len(generated_text.split()),
+                    'total_tokens': len(prompt.split()) + len(generated_text.split()),
+                },
+                finish_reason='stop',
+                metadata={},
+            )
+
     def _format_messages_to_prompt(self, messages: List[LLMMessage]) -> str:
-        """Formate les messages en prompt pour HuggingFace."""
+        """Formate les messages en prompt texte (mode local uniquement)."""
         prompt_parts = []
         for msg in messages:
             if msg.role == "system":
@@ -418,9 +465,113 @@ class HuggingFaceLLM(BaseLLM):
                 prompt_parts.append(f"User: {msg.content}")
             elif msg.role == "assistant":
                 prompt_parts.append(f"Assistant: {msg.content}")
-        
         prompt_parts.append("Assistant:")
         return "\n\n".join(prompt_parts)
+
+
+class GeminiLLM(BaseLLM):
+    """LLM pour Google Gemini API (utilisant google-genai)."""
+    
+    def _initialize_client(self) -> None:
+        """Initialise le client Gemini."""
+        if self._client is None:
+            try:
+                # Utiliser le nouveau package google-genai
+                from google import genai
+                
+                # Charger la clé API depuis l'environnement
+                api_key = self.config.api_key
+                if api_key and api_key.startswith('$'):
+                    # Si c'est une référence d'env var ($VAR_NAME), la résoudre
+                    api_key = os.getenv(api_key[1:]) or api_key
+                elif not api_key or api_key == 'GOOGLE_API_KEY':
+                    # Sinon, chercher dans l'environnement
+                    api_key = os.getenv('GOOGLE_API_KEY') or self.config.api_key
+                
+                if not api_key:
+                    raise ValueError("GOOGLE_API_KEY not found in environment or config")
+                
+                # Créer le client avec la clé API (pas de configure())
+                self._client = genai.Client(api_key=api_key)
+            except ImportError:
+                raise ImportError(
+                    "google-genai package required. Install with: pip install google-genai"
+                )
+    
+    def generate(
+        self,
+        messages: List[LLMMessage],
+        **kwargs
+    ) -> LLMResponse:
+        """Génère une réponse via Gemini."""
+        self._initialize_client()
+        
+        # Préparer les messages au format Gemini
+        request_messages = []
+        system_prompt = None
+        
+        for msg in messages:
+            if msg.role == "system":
+                system_prompt = msg.content
+            elif msg.role == "user":
+                request_messages.append({
+                    "role": "user",
+                    "parts": [{"text": msg.content}]
+                })
+            elif msg.role == "assistant":
+                request_messages.append({
+                    "role": "model",
+                    "parts": [{"text": msg.content}]
+                })
+        
+        # Configuration pour API Gemini
+        model_name = kwargs.get('model', self.config.model)
+        
+        # Formater le nom du modèle correctement pour google-genai
+        # Si le modèle ne commence pas par "models/", l'ajouter
+        if not model_name.startswith("models/"):
+            model_name = f"models/{model_name}"
+        
+        # Appeler l'API avec le nouveau client
+        try:
+            from google.genai.types import GenerateContentConfig
+            
+            
+            # Créer la configuration avec les paramètres corrects
+            config_dict = {
+                "temperature": kwargs.get('temperature', self.config.temperature),
+                "max_output_tokens": kwargs.get('max_tokens', self.config.max_tokens),
+                "top_p": kwargs.get('top_p', self.config.top_p),
+                "top_k": kwargs.get('top_k', self.config.top_k),
+            }
+            
+            # Ajouter system_instruction si fourni
+            if system_prompt:
+                config_dict["system_instruction"] = system_prompt
+            
+            config = GenerateContentConfig(**config_dict)
+            
+            # Appeler l'API generate_content
+            response = self._client.models.generate_content(
+                model=model_name,
+                contents=request_messages,
+                config=config
+            )
+            
+            return LLMResponse(
+                content=response.text if hasattr(response, 'text') else str(response),
+                model=kwargs.get('model', self.config.model),
+                usage={
+                    'prompt_tokens': 0,
+                    'completion_tokens': 0,
+                    'total_tokens': 0
+                },
+                finish_reason="STOP",
+                metadata={}
+            )
+        except Exception as e:
+            raise RuntimeError(f"Erreur lors de l'appel Gemini API: {str(e)}")
+
 
 class MistralLLM(BaseLLM):
     """LLM pour Mistral AI."""
@@ -504,7 +655,9 @@ def create_llm(
         return OllamaLLM(config)
     elif provider == LLMProvider.HUGGINGFACE:
         return HuggingFaceLLM(config)
-    elif provider == LLMProvider.MISTRAL:  # Ajout
+    elif provider == LLMProvider.MISTRAL:
         return MistralLLM(config)
+    elif provider == LLMProvider.GEMINI:
+        return GeminiLLM(config)
     else:
         raise ValueError(f"Unknown provider: {provider}")
