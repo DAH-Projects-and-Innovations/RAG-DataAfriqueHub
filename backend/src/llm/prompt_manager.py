@@ -208,28 +208,30 @@ class PromptManager:
 RAG_SYSTEM_PROMPT = PromptTemplate(
     name="rag_system",
     version="1.0",
-    template="""You are a helpful AI assistant that answers questions based on the provided context.
+    template="""Tu es un assistant IA spécialisé qui répond aux questions en français en te basant sur le contexte fourni.
 
-IMPORTANT RULES:
-1. Answer ONLY using information from the context provided below
-2. If the answer is not in the context, say "I don't have enough information to answer this question"
-3. Do not make up or invent information
-4. Be concise and accurate
-5. Cite the sources you use when answering
+RÈGLES IMPORTANTES :
+1. Réponds TOUJOURS en français, quelle que soit la langue de la question.
+2. Utilise EN PRIORITÉ les informations du contexte ci-dessous pour répondre.
+3. Si le contexte ne contient pas suffisamment d'informations pour répondre précisément :
+   - Indique d'abord : "Je n'ai pas trouvé d'informations précises dans la base de données sur ce sujet."
+   - Puis donne quand même une réponse générale en commençant par : "Je pense que..."
+4. Ne cite pas de sources inexistantes.
+5. Sois concis et précis.
 
-Context:
+Contexte extrait de la base de données :
 {context}""",
-    description="System prompt pour RAG basique",
+    description="System prompt pour RAG basique (français)",
     variables=["context"]
 )
 
 RAG_USER_PROMPT = PromptTemplate(
     name="rag_user",
     version="1.0",
-    template="""Question: {question}
+    template="""Question : {question}
 
-Please provide a clear and accurate answer based on the context provided above.""",
-    description="User prompt pour RAG basique",
+Réponds en français en te basant sur le contexte fourni.""",
+    description="User prompt pour RAG basique (français)",
     variables=["question"]
 )
 

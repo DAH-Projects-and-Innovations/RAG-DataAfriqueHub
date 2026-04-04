@@ -177,9 +177,9 @@ function App() {
     const rev = [...messages].slice().reverse();
     const lastAssistant = rev.find(m => m.role === 'assistant');
     const lastUser = rev.find(m => m.role === 'user');
-    // On suit l'ordre demandé: assistant puis utilisateur
-    if (lastAssistant) historySnapshot.push({ role: 'assistant', content: lastAssistant.content });
+    // Ordre correct : user puis assistant (le LLM attend cet ordre)
     if (lastUser) historySnapshot.push({ role: 'user', content: lastUser.content });
+    if (lastAssistant) historySnapshot.push({ role: 'assistant', content: lastAssistant.content });
 
     // 1. Reset UI
     setInput('');
