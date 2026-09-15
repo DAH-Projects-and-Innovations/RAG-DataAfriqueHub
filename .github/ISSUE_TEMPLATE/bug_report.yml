@@ -1,0 +1,60 @@
+name: 🐛 Rapport de bug
+description: Signaler un comportement incorrect ou inattendu
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de prendre le temps de signaler ce bug ! Plus la description est
+        précise, plus vite il pourra être corrigé.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description du bug
+      description: Que se passe-t-il ? Qu'attendais-tu à la place ?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Étapes pour reproduire
+      description: Étapes précises pour reproduire le comportement.
+      placeholder: |
+        1. Lancer `docker compose up` en mode `free`
+        2. Envoyer une requête POST /query avec...
+        3. Observer l'erreur...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode RAG concerné
+      options:
+        - free
+        - hybrid
+        - premium
+        - non applicable / frontend
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environnement
+      placeholder: |
+        - OS :
+        - Version Python / Node :
+        - Docker ou installation locale :
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / traceback pertinents
+      render: shell
+    validations:
+      required: false
