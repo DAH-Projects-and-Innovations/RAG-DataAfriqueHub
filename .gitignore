@@ -42,3 +42,14 @@ coverage.xml
 .vscode/
 *.swp
 *.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Node / frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*
