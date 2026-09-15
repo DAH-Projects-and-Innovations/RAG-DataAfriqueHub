@@ -6,17 +6,23 @@ import Swal from 'sweetalert2';
 import LogoAfriqueHub from './assets/logo-afrique-hub.jpeg';
 import { apiService } from './services/api';
 
+function safeParseArray(key) {
+  try {
+    const saved = localStorage.getItem(key);
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    try { localStorage.removeItem(key); } catch { /* storage unavailable */ }
+    return [];
+  }
+}
+
 function App() {
   // --- ÉTATS ---
-  const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem('chat_history');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [messages, setMessages] = useState(() => safeParseArray('chat_history'));
 
-  const [uploadedFiles, setUploadedFiles] = useState(() => {
-    const saved = localStorage.getItem('indexed_files');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [uploadedFiles, setUploadedFiles] = useState(() => safeParseArray('indexed_files'));
 
   const [input, setInput] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
