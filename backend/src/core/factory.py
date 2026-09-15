@@ -123,17 +123,25 @@ class RAGPipelineFactory:
         # Création des composants obligatoires
         embedder = cls._create_component('embedders', config['embedder'])
         vector_store = cls._create_component('vector_stores', config['vector_store'])
-        config['retriever']['params']['vector_store'] = vector_store
-        config['retriever']['params']['embedder'] = embedder
-        retriever = cls._create_component('retrievers', config['retriever'])
+
+        retriever_config = config['retriever'].copy()
+        retriever_config['params'] = config['retriever']['params'].copy()
+
+        retriever_config['params']['vector_store'] = vector_store
+        retriever_config['params']['embedder'] = embedder
+
+        retriever = cls._create_component('retrievers', retriever_config)
 
         # 1. Créer le PromptManager d'abord
         prompt_manager = cls._create_component('prompt_managers', config['prompt_managers'])
         
         # 2. Passer le prompt_manager aux params du LLM avant création
-        llm_config = config['llm']
+        llm_config = config['llm'].copy()
+        llm_config['params'] = config['llm']['params'].copy()
+
         llm_config['params']['prompt_manager'] = prompt_manager
         llm_config['params']['provider'] = llm_config['name'] # ex: 'ollama'
+
         llm = cls._create_component('llms', llm_config)
         
         # Chunker optionnel (si absent, la route ingest utilisera ConfigurableChunker par défaut)
@@ -145,8 +153,11 @@ class RAGPipelineFactory:
         query_rewriter = None
         if 'query_rewriter' in config:
             # Passer le LLM aux params du query_rewriter
-            config['query_rewriter']['params']['llm'] = llm
-            query_rewriter = cls._create_component('query_rewriters', config['query_rewriter'])
+            query_rewriter_config = config['query_rewriter'].copy()
+            query_rewriter_config['params'] = config['query_rewriter']['params'].copy()
+
+            query_rewriter_config['params']['llm'] = llm
+            query_rewriter = cls._create_component('query_rewriters', query_rewriter_config)
         
         reranker = None
         if 'reranker' in config:
