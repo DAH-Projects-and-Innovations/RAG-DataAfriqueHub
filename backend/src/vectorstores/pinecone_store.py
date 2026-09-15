@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 from src.core.interfaces import IVectorStore
 from src.core.models import Chunk, Document
@@ -35,6 +35,7 @@ class PineconeVectorStore(IVectorStore):
     ):
         try:
             from pinecone import Pinecone, ServerlessSpec
+
             self._ServerlessSpec = ServerlessSpec
         except ImportError as e:
             raise ImportError(
@@ -52,7 +53,12 @@ class PineconeVectorStore(IVectorStore):
         existing = [idx.name for idx in self.pc.list_indexes()]
         if index_name not in existing:
             if create_index_if_missing:
-                logger.info("Création de l'index Pinecone '%s' (dim=%d, metric=%s)...", index_name, dimension, metric)
+                logger.info(
+                    "Création de l'index Pinecone '%s' (dim=%d, metric=%s)...",
+                    index_name,
+                    dimension,
+                    metric,
+                )
                 # On parse l'environnement pour la spec serverless (ex: "us-east-1-aws" → cloud=aws, region=us-east-1)
                 cloud, region = self._parse_environment(environment)
                 self.pc.create_index(
@@ -103,7 +109,7 @@ class PineconeVectorStore(IVectorStore):
         """Pinecone n'accepte que str/int/float/bool dans les métadonnées."""
         clean = {}
         for k, v in (meta or {}).items():
-            if isinstance(v, (str, int, float, bool)):
+            if isinstance(v, str | int | float | bool):
                 clean[k] = v
             else:
                 clean[k] = str(v)
@@ -113,7 +119,7 @@ class PineconeVectorStore(IVectorStore):
     # IVectorStore
     # ------------------------------------------------------------------
 
-    def add_chunks(self, chunks: List[Chunk]) -> None:
+    def add_chunks(self, chunks: list[Chunk]) -> None:
         if not chunks:
             return
 
@@ -122,25 +128,35 @@ class PineconeVectorStore(IVectorStore):
             if chunk.embedding is None:
                 logger.warning("Chunk %d sans embedding — ignoré", i)
                 continue
-            vectors.append({
-                "id": self._chunk_id(chunk, i),
-                "values": chunk.embedding,
-                "metadata": {
-                    **self._metadata_to_pinecone(getattr(chunk, "metadata", {})),
-                    "content": chunk.content,  # stocké dans metadata pour la récupération
-                },
-            })
+            vectors.append(
+                {
+                    "id": self._chunk_id(chunk, i),
+                    "values": chunk.embedding,
+                    "metadata": {
+                        **self._metadata_to_pinecone(getattr(chunk, "metadata", {})),
+                        "content": chunk.content,  # stocké dans metadata pour la récupération
+                    },
+                }
+            )
 
         # Upsert par batches
         for start in range(0, len(vectors), _UPSERT_BATCH_SIZE):
             batch = vectors[start : start + _UPSERT_BATCH_SIZE]
             self.index.upsert(vectors=batch, namespace=self.namespace)
-            logger.debug("Upsert Pinecone: %d vecteurs (batch %d)", len(batch), start // _UPSERT_BATCH_SIZE + 1)
+            logger.debug(
+                "Upsert Pinecone: %d vecteurs (batch %d)",
+                len(batch),
+                start // _UPSERT_BATCH_SIZE + 1,
+            )
 
-        logger.info("%d chunks indexés dans Pinecone (namespace='%s')", len(vectors), self.namespace)
+        logger.info(
+            "%d chunks indexés dans Pinecone (namespace='%s')",
+            len(vectors),
+            self.namespace,
+        )
 
-    def search(self, query_embedding: List[float], top_k: int = 5, **kwargs) -> List[Document]:
-        filter_dict: Optional[Dict[str, Any]] = kwargs.get("filter")
+    def search(self, query_embedding: list[float], top_k: int = 5, **kwargs) -> list[Document]:
+        filter_dict: dict[str, Any] | None = kwargs.get("filter")
         response = self.index.query(
             vector=query_embedding,
             top_k=top_k,
@@ -149,7 +165,7 @@ class PineconeVectorStore(IVectorStore):
             filter=filter_dict,
         )
 
-        docs: List[Document] = []
+        docs: list[Document] = []
         for match in response.get("matches", []):
             meta = dict(match.get("metadata", {}))
             content = meta.pop("content", "")
@@ -158,7 +174,7 @@ class PineconeVectorStore(IVectorStore):
 
         return docs
 
-    def delete(self, where: Dict[str, Any]) -> None:
+    def delete(self, where: dict[str, Any]) -> None:
         """
         Supprime les vecteurs dont les métadonnées correspondent aux filtres.
 
@@ -172,7 +188,9 @@ class PineconeVectorStore(IVectorStore):
             ValueError: Si aucun filtre n'est fourni.
         """
         if not where:
-            raise ValueError("Un filtre 'where' non vide est requis pour éviter la suppression totale.")
+            raise ValueError(
+                "Un filtre 'where' non vide est requis pour éviter la suppression totale."
+            )
 
         try:
             # On utilise un vecteur nul pour fetcher tous les IDs qui matchent le filtre
@@ -209,7 +227,7 @@ class PineconeVectorStore(IVectorStore):
             logger.error("Erreur lors de la suppression de l'index '%s': %s", collection_name, e)
             raise
 
-    def get_collection_stats(self, collection_name: str) -> Dict[str, Any]:
+    def get_collection_stats(self, collection_name: str) -> dict[str, Any]:
         try:
             stats = self.index.describe_index_stats()
             return {

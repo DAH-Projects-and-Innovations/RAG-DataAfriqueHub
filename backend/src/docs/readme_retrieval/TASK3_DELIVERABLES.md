@@ -145,8 +145,8 @@ comparator = RetrievalComparator(
     strategies={
         "Dense": dense_strategy,
         "Hybrid": hybrid_strategy,
-        "Hybrid+Rerank": rerank_strategy
-    }
+        "Hybrid+Rerank": rerank_strategy,
+    },
 )
 
 results = comparator.run_comparison()
@@ -391,8 +391,8 @@ Le système est **production-ready** et prêt à être intégré dans le pipelin
 
 ---
 
-**Version** : 1.0.0  
-**Date** : 2024  
-**Status** : ✅ COMPLET - Production Ready  
-**Lignes de code** : ~2500 lignes (code + docs + tests)  
+**Version** : 1.0.0
+**Date** : 2024
+**Status** : ✅ COMPLET - Production Ready
+**Lignes de code** : ~2500 lignes (code + docs + tests)
 **Fichiers créés** : 14 fichiers

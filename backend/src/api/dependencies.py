@@ -1,7 +1,9 @@
-import os
 import functools
+import os
+
 from dotenv import load_dotenv
-from fastapi import HTTPException, Header
+from fastapi import Header, HTTPException
+
 from src.core.factory import RAGPipelineFactory
 from src.implementations import register_all_components
 
@@ -21,11 +23,11 @@ def verify_api_key(x_api_key: str = Header(default=None)) -> None:
     if expected and x_api_key != expected:
         raise HTTPException(
             status_code=401,
-            detail="Clé API manquante ou invalide. Fournissez le header X-API-Key."
+            detail="Clé API manquante ou invalide. Fournissez le header X-API-Key.",
         )
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def get_pipeline():
     register_all_components()
 

@@ -4,14 +4,14 @@ tels que déclarés dans la section `models` du fichier de configuration YAML ac
 """
 
 from fastapi import APIRouter, Depends
-from typing import List
+
 from src.api.dependencies import get_pipeline
 
 router = APIRouter(prefix="/models", tags=["Modèles"])
 
 
 @router.get("")
-def list_models(pipeline=Depends(get_pipeline)) -> List[dict]:
+def list_models(pipeline=Depends(get_pipeline)) -> list[dict]:
     """
     Retourne les modèles disponibles définis dans pipeline_config.models.
 

@@ -12,11 +12,11 @@ RAG (Retrieval-Augmented Generation) modulaires et configurables.
 Usage rapide:
     >>> from src.core import RAGPipelineFactory
     >>> from src.implementations import register_all_components
-    >>> 
+    >>>
     >>> register_all_components()
     >>> config = RAGPipelineFactory.load_config('configs/hybrid.yaml')
     >>> pipeline = RAGPipelineFactory.create_from_config(config)
-    >>> 
+    >>>
     >>> response = pipeline.query("Quelle est la question?")
     >>> print(response.answer)
 
@@ -27,7 +27,6 @@ Composants principaux:
 """
 
 import os
-import sys
 from pathlib import Path
 
 __version__ = "1.0.0"
@@ -36,45 +35,45 @@ __license__ = "MIT"
 
 # Core exports
 from .core import (
+    ILLM,
+    Chunk,
     # Models
     Document,
-    Chunk,
-    Query,
-    RAGResponse,
+    IChunker,
     # Interfaces
     IDocumentLoader,
-    IChunker,
     IEmbedder,
-    IVectorStore,
-    IRetriever,
-    IReranker,
     IQueryRewriter,
-    ILLM,
+    IReranker,
+    IRetriever,
+    IVectorStore,
+    Query,
     # Core classes
     RAGPipeline,
     RAGPipelineFactory,
+    RAGResponse,
 )
 
 __all__ = [
     # Version
-    '__version__',
+    "__version__",
     # Models
-    'Document',
-    'Chunk',
-    'Query',
-    'RAGResponse',
+    "Document",
+    "Chunk",
+    "Query",
+    "RAGResponse",
     # Interfaces
-    'IDocumentLoader',
-    'IChunker',
-    'IEmbedder',
-    'IVectorStore',
-    'IRetriever',
-    'IReranker',
-    'IQueryRewriter',
-    'ILLM',
+    "IDocumentLoader",
+    "IChunker",
+    "IEmbedder",
+    "IVectorStore",
+    "IRetriever",
+    "IReranker",
+    "IQueryRewriter",
+    "ILLM",
     # Core classes
-    'RAGPipeline',
-    'RAGPipelineFactory',
+    "RAGPipeline",
+    "RAGPipelineFactory",
 ]
 
 
@@ -83,35 +82,35 @@ def get_version():
     return __version__
 
 
-def quick_start(config_path: str = 'configs/hybrid.yaml'):
+def quick_start(config_path: str = "configs/hybrid.yaml"):
     """
     Démarrage rapide avec configuration par défaut
-    
+
     Args:
         config_path: Chemin vers le fichier de configuration
-        
+
     Returns:
         Pipeline RAG prêt à l'emploi
-        
+
     Example:
         >>> pipeline = quick_start()
         >>> response = pipeline.query("Test question")
     """
     try:
         from .implementations import register_all_components
-        
+
         # Enregistrer tous les composants
         register_all_components()
-        
+
         # Charger la configuration
         config = RAGPipelineFactory.load_config(config_path)
-        
+
         # Créer le pipeline
         pipeline = RAGPipelineFactory.create_from_config(config)
-        
+
         print(f"✅ Pipeline initialisé avec la configuration: {config_path}")
         return pipeline
-        
+
     except Exception as e:
         print(f"❌ Erreur lors de l'initialisation: {e}")
         raise
@@ -120,12 +119,13 @@ def quick_start(config_path: str = 'configs/hybrid.yaml'):
 def list_available_components():
     """
     Liste tous les composants disponibles
-    
+
     Returns:
         Dictionnaire des composants par catégorie
     """
     try:
         from .implementations import register_all_components
+
         register_all_components()
         return RAGPipelineFactory.list_components()
     except Exception as e:
@@ -136,23 +136,23 @@ def list_available_components():
 def setup_logging(level: str = "INFO"):
     """
     Configure le logging pour le package
-    
+
     Args:
         level: Niveau de log (DEBUG, INFO, WARNING, ERROR)
     """
     import logging
-    
+
     # Configuration du logger
     logging.basicConfig(
         level=getattr(logging, level.upper()),
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
-    
+
     # Logger spécifique pour le package
-    logger = logging.getLogger('src')
+    logger = logging.getLogger("src")
     logger.setLevel(getattr(logging, level.upper()))
-    
+
     print(f"✅ Logging configuré au niveau: {level}")
 
 
@@ -161,56 +161,46 @@ def setup_logging(level: str = "INFO"):
 # ==========================================
 
 DEFAULT_CONFIG = {
-    'embedder': {
-        'name': 'sentence_transformers',
-        'params': {
-            'model_name': 'BAAI/bge-large-en-v1.5',
-            'device': 'cpu'
-        }
+    "embedder": {
+        "name": "sentence_transformers",
+        "params": {"model_name": "BAAI/bge-large-en-v1.5", "device": "cpu"},
     },
-    'vector_store': {
-        'name': 'chroma',
-        'params': {
-            'collection_name': 'documents',
-            'persist_directory': './data/chroma_db'
-        }
+    "vector_store": {
+        "name": "chroma",
+        "params": {
+            "collection_name": "documents",
+            "persist_directory": "./data/chroma_db",
+        },
     },
-    'retriever': {
-        'name': 'vector_retriever',
-        'params': {
-            'search_type': 'similarity'
-        }
+    "retriever": {"name": "vector_retriever", "params": {"search_type": "similarity"}},
+    "llm": {
+        "name": "ollama",
+        "params": {"model": "llama3.1:8b", "base_url": "http://localhost:11434"},
     },
-    'llm': {
-        'name': 'ollama',
-        'params': {
-            'model': 'llama3.1:8b',
-            'base_url': 'http://localhost:11434'
-        }
+    "pipeline_config": {
+        "default_top_k": 5,
+        "enable_caching": True,
+        "log_level": "INFO",
     },
-    'pipeline_config': {
-        'default_top_k': 5,
-        'enable_caching': True,
-        'log_level': 'INFO'
-    }
 }
 
 
 def create_default_pipeline():
     """
     Crée un pipeline avec la configuration par défaut
-    
+
     Returns:
         Pipeline RAG avec configuration gratuite
     """
     try:
         from .implementations import register_all_components
+
         register_all_components()
-        
+
         pipeline = RAGPipelineFactory.create_from_config(DEFAULT_CONFIG)
         print("✅ Pipeline créé avec la configuration par défaut")
         return pipeline
-        
+
     except Exception as e:
         print(f"❌ Erreur: {e}")
         raise
@@ -220,103 +210,97 @@ def create_default_pipeline():
 # Utilitaires
 # ==========================================
 
+
 def validate_environment():
     """
     Vérifie que l'environnement est correctement configuré
-    
+
     Returns:
         Dict avec les résultats de validation
     """
     results = {
-        'python_version': True,
-        'dependencies': {},
-        'env_vars': {},
-        'recommendations': []
+        "python_version": True,
+        "dependencies": {},
+        "env_vars": {},
+        "recommendations": [],
     }
-    
-    # Vérifier la version Python
-    if sys.version_info < (3, 8):
-        results['python_version'] = False
-        results['recommendations'].append("Python 3.8+ requis")
-    
+
     # Vérifier les dépendances
-    required = ['sentence_transformers', 'chromadb', 'yaml', 'fastapi']
+    required = ["sentence_transformers", "chromadb", "yaml", "fastapi"]
     for dep in required:
         try:
             __import__(dep)
-            results['dependencies'][dep] = True
+            results["dependencies"][dep] = True
         except ImportError:
-            results['dependencies'][dep] = False
-            results['recommendations'].append(f"Installer {dep}")
-    
+            results["dependencies"][dep] = False
+            results["recommendations"].append(f"Installer {dep}")
+
     # Vérifier les variables d'environnement optionnelles
-    optional_env = ['OPENAI_API_KEY', 'COHERE_API_KEY', 'ANTHROPIC_API_KEY']
+    optional_env = ["OPENAI_API_KEY", "COHERE_API_KEY", "ANTHROPIC_API_KEY"]
     for var in optional_env:
-        results['env_vars'][var] = bool(os.getenv(var))
-    
+        results["env_vars"][var] = bool(os.getenv(var))
+
     return results
 
 
 def print_validation_report():
     """Affiche un rapport de validation de l'environnement"""
     results = validate_environment()
-    
+
     print("\n📋 Rapport de validation de l'environnement:")
     print(f"  Python: {'✅' if results['python_version'] else '❌'}")
-    
+
     print("\n  Dépendances:")
-    for dep, status in results['dependencies'].items():
+    for dep, status in results["dependencies"].items():
         print(f"    {dep}: {'✅' if status else '❌'}")
-    
+
     print("\n  Variables d'environnement (optionnelles):")
-    for var, status in results['env_vars'].items():
+    for var, status in results["env_vars"].items():
         print(f"    {var}: {'✅' if status else '⚠️  non défini'}")
-    
-    if results['recommendations']:
+
+    if results["recommendations"]:
         print("\n  💡 Recommandations:")
-        for rec in results['recommendations']:
+        for rec in results["recommendations"]:
             print(f"    - {rec}")
     else:
         print("\n  ✅ Environnement prêt!")
 
 
-def create_sample_documents(output_dir: str = './data/documents'):
+def create_sample_documents(output_dir: str = "./data/documents"):
     """
     Crée des documents d'exemple pour tester le pipeline
-    
+
     Args:
         output_dir: Répertoire de sortie
     """
     Path(output_dir).mkdir(parents=True, exist_ok=True)
-    
+
     samples = {
-        'rag_introduction.txt': """
+        "rag_introduction.txt": """
         Le RAG (Retrieval-Augmented Generation) est une technique qui combine
         la recherche d'informations et la génération de texte. Cette approche
         permet aux modèles de langage d'accéder à des connaissances externes
         pour produire des réponses plus précises et actualisées.
         """,
-        
-        'architecture.txt': """
+        "architecture.txt": """
         L'architecture RAG modulaire se compose de plusieurs composants
         interchangeables: le loader pour charger les documents, le chunker
         pour les découper, l'embedder pour les vectoriser, le vector store
         pour les stocker, le retriever pour les rechercher, et le LLM pour
         générer les réponses finales.
         """,
-        
-        'benefits.txt': """
+        "benefits.txt": """
         Les principaux avantages du RAG incluent: la réduction des
         hallucinations des LLMs, l'accès à des connaissances actualisées,
         la traçabilité des sources, et la possibilité de travailler avec
         des domaines spécialisés sans fine-tuning complet du modèle.
-        """
+        """,
     }
-    
+
     for filename, content in samples.items():
         filepath = Path(output_dir) / filename
-        filepath.write_text(content.strip(), encoding='utf-8')
-    
+        filepath.write_text(content.strip(), encoding="utf-8")
+
     print(f"✅ {len(samples)} documents d'exemple créés dans {output_dir}")
 
 

@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+
 from src.core.interfaces import IEmbedder
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ class OpenAIEmbedder(IEmbedder):
         self,
         api_key: str,
         model: str = "text-embedding-3-large",
-        dimensions: Optional[int] = None,
+        dimensions: int | None = None,
         **kwargs,
     ):
         try:
@@ -58,13 +58,13 @@ class OpenAIEmbedder(IEmbedder):
     # IEmbedder
     # ------------------------------------------------------------------
 
-    def embed_texts(self, texts: List[str], **kwargs) -> List[List[float]]:
+    def embed_texts(self, texts: list[str], **kwargs) -> list[list[float]]:
         if not texts:
             return []
         # L'API OpenAI accepte jusqu'à 2048 inputs par requête
         # On découpe en batches de 512 pour rester dans les limites de tokens
         batch_size = kwargs.pop("batch_size", 512)
-        results: List[List[float]] = []
+        results: list[list[float]] = []
         kw = {**self._build_kwargs(), **kwargs}
 
         for i in range(0, len(texts), batch_size):
@@ -78,14 +78,19 @@ class OpenAIEmbedder(IEmbedder):
                     **kw,
                 )
                 results.extend([item.embedding for item in response.data])
-                logger.debug("Batch %d/%d embeddé (%d textes)", i // batch_size + 1, -(-len(texts) // batch_size), len(batch))
+                logger.debug(
+                    "Batch %d/%d embeddé (%d textes)",
+                    i // batch_size + 1,
+                    -(-len(texts) // batch_size),
+                    len(batch),
+                )
             except Exception as e:
                 logger.error("Erreur lors de l'embedding du batch %d: %s", i // batch_size, e)
                 raise
 
         return results
 
-    def embed_query(self, query: str, **kwargs) -> List[float]:
+    def embed_query(self, query: str, **kwargs) -> list[float]:
         kw = {**self._build_kwargs(), **kwargs}
         try:
             response = self.client.embeddings.create(

@@ -1,7 +1,7 @@
 # 🚀 Guide Complet - Moteur RAG DataAfriqueHub
 
-**Version:** 1.0.0  
-**Statut:** ✅ Production Ready  
+**Version:** 1.0.0
+**Statut:** ✅ Production Ready
 **Date:** Février 2026
 
 ---
@@ -138,11 +138,11 @@ from src.llm.ollama_llm import LocalLLM
 
 llm = LocalLLM(
     model_path="models/Mistral-7B-Instruct-v0.3.Q4_K_M.gguf",
-    n_ctx=4096,              # Taille fenêtre contextuelle
-    temperature=0.7,         # Créativité (0-1)
-    n_gpu_layers=-1,         # -1 = tout sur GPU, 0 = CPU only
-    system_prompt="...",     # Optionnel
-    user_prompt_template="..." # Optionnel
+    n_ctx=4096,  # Taille fenêtre contextuelle
+    temperature=0.7,  # Créativité (0-1)
+    n_gpu_layers=-1,  # -1 = tout sur GPU, 0 = CPU only
+    system_prompt="...",  # Optionnel
+    user_prompt_template="...",  # Optionnel
 )
 ```
 
@@ -157,7 +157,7 @@ response = llm.generate_with_context(
     query="Question ?",
     context=[Document(...), Document(...)],
     system_prompt="...",  # Override optionnel
-    user_prompt_template="..."
+    user_prompt_template="...",
 )
 ```
 
@@ -183,7 +183,7 @@ llm = OpenAILLM(
     model_name="gpt-4o-mini",  # ou "gpt-4o", "gpt-4"
     temperature=0.7,
     system_prompt="...",
-    user_prompt_template="..."
+    user_prompt_template="...",
 )
 ```
 
@@ -212,7 +212,7 @@ llm = MistralLLM(
     model_name="mistral-small-latest",
     temperature=0.7,
     system_prompt="...",
-    user_prompt_template="..."
+    user_prompt_template="...",
 )
 ```
 
@@ -248,7 +248,7 @@ custom_refusal = "Information non disponible dans mes sources."
 llm = LocalLLM(
     model_path="...",
     system_prompt=f"""Réponds uniquement sur base du contexte.
-    Si tu ne sais pas, dis: '{custom_refusal}'"""
+    Si tu ne sais pas, dis: '{custom_refusal}'""",
 )
 ```
 
@@ -261,7 +261,7 @@ llm = LocalLLM(
 ```python
 response = pipeline.query(
     "Question ?",
-    include_citations=True  # ✨ Active les citations
+    include_citations=True,  # ✨ Active les citations
 )
 ```
 
@@ -379,22 +379,19 @@ from src.core.models import Document
 docs = [
     Document(
         content="L'ESATIC est une école d'ingénieurs située à Abidjan.",
-        metadata={"source": "esatic_info.pdf", "page": 1}
+        metadata={"source": "esatic_info.pdf", "page": 1},
     ),
     Document(
         content="Elle forme des ingénieurs en télécommunications.",
-        metadata={"source": "esatic_info.pdf", "page": 2}
-    )
+        metadata={"source": "esatic_info.pdf", "page": 2},
+    ),
 ]
 
 # 2. Initialiser le LLM
 llm = LocalLLM(model_path="models/Mistral-7B-Instruct-v0.3.Q4_K_M.gguf")
 
 # 3. Question avec contexte
-response = llm.generate_with_context(
-    query="Où se trouve l'ESATIC ?",
-    context=docs
-)
+response = llm.generate_with_context(query="Où se trouve l'ESATIC ?", context=docs)
 
 print(response)  # "L'ESATIC est située à Abidjan."
 ```
@@ -405,7 +402,7 @@ print(response)  # "L'ESATIC est située à Abidjan."
 from src.core.factory import RAGPipelineFactory
 
 # 1. Charger une configuration
-pipeline = RAGPipelineFactory.create_from_config('configs/free.yaml')
+pipeline = RAGPipelineFactory.create_from_config("configs/free.yaml")
 
 # 2. Ingérer des documents (une seule fois)
 from src.loaders.pdf_loader import PDFLoader
@@ -413,13 +410,13 @@ from src.chunkers.recursive_chunker import RecursiveChunker
 
 loader = PDFLoader()
 chunker = RecursiveChunker()
-pipeline.ingest(loader, chunker, 'path/to/documents/')
+pipeline.ingest(loader, chunker, "path/to/documents/")
 
 # 3. Effectuer une requête avec citations
 response = pipeline.query(
     "Quelles sont les filières de l'ESATIC ?",
     top_k=5,
-    include_citations=True  # ✨ Citations automatiques
+    include_citations=True,  # ✨ Citations automatiques
 )
 
 print(response.answer)
@@ -451,14 +448,14 @@ Réponds de manière claire et cite tes sources."""
 llm = LocalLLM(
     model_path="models/Mistral-7B-Instruct-v0.3.Q4_K_M.gguf",
     system_prompt=custom_system,
-    temperature=0.3  # Plus déterministe
+    temperature=0.3,  # Plus déterministe
 )
 
 docs = [Document(content="...")]
 response = llm.generate_with_context(
     query="...",
     context=docs,
-    user_prompt_template=custom_user  # Override du template
+    user_prompt_template=custom_user,  # Override du template
 )
 ```
 
@@ -482,10 +479,7 @@ response = llm.generate_with_context(
 ```python
 MODEL_PRESETS = {
     # ... modèles existants ...
-    "nouveau_modele": {
-        "repo": "auteur/repo-huggingface",
-        "file": "nom-du-fichier.gguf"
-    }
+    "nouveau_modele": {"repo": "auteur/repo-huggingface", "file": "nom-du-fichier.gguf"}
 }
 ```
 
@@ -623,7 +617,7 @@ uv run python scripts/download_model.py phi3
 ```python
 llm = LocalLLM(
     model_path="...",
-    n_gpu_layers=-1  # Utilise tout le GPU
+    n_gpu_layers=-1,  # Utilise tout le GPU
 )
 ```
 
@@ -632,7 +626,7 @@ llm = LocalLLM(
 ```python
 llm = LocalLLM(
     model_path="...",
-    n_ctx=2048  # Au lieu de 4096
+    n_ctx=2048,  # Au lieu de 4096
 )
 ```
 
@@ -661,13 +655,13 @@ uv run python script.py  # Au lieu de python script.py
 
 Ce moteur RAG est **production-ready** avec:
 
-✅ Architecture modulaire et extensible  
-✅ Support multi-LLM (cloud et local)  
-✅ Sécurité anti-hallucination  
-✅ Citations automatiques  
-✅ Configuration flexible (YAML)  
-✅ Tests validés (8/8)  
-✅ Documentation complète  
+✅ Architecture modulaire et extensible
+✅ Support multi-LLM (cloud et local)
+✅ Sécurité anti-hallucination
+✅ Citations automatiques
+✅ Configuration flexible (YAML)
+✅ Tests validés (8/8)
+✅ Documentation complète
 ✅ Exemples fonctionnels
 
 **Prêt pour l'intégration dans DataAfriqueHub !** 🚀
