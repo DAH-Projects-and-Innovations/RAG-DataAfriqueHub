@@ -5,7 +5,8 @@ La validation se déclenche au chargement, avant la création des composants.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, field_validator, model_validator
 
 
@@ -13,7 +14,7 @@ class ComponentConfig(BaseModel):
     """Configuration générique d'un composant (embedder, retriever, llm…)"""
 
     name: str
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
 
     @field_validator("name")
     @classmethod
@@ -59,20 +60,20 @@ class PipelineConfigSchema(BaseModel):
     prompt_managers: ComponentConfig
 
     # Optionnels
-    chunker: Optional[ComponentConfig] = None
-    reranker: Optional[ComponentConfig] = None
-    query_rewriter: Optional[ComponentConfig] = None
+    chunker: ComponentConfig | None = None
+    reranker: ComponentConfig | None = None
+    query_rewriter: ComponentConfig | None = None
 
     # Métadonnées pipeline
     pipeline_config: PipelineMetaConfig = PipelineMetaConfig()
 
     # Liste des modèles exposée via /models
-    models: List[ModelEntry] = []
+    models: list[ModelEntry] = []
 
     model_config = {"extra": "allow"}
 
     @model_validator(mode="after")
-    def check_retriever_has_no_vector_store_in_yaml(self) -> "PipelineConfigSchema":
+    def check_retriever_has_no_vector_store_in_yaml(self) -> PipelineConfigSchema:
         """
         vector_store et embedder sont injectés dynamiquement dans retriever.params
         par la factory — ils ne doivent PAS être présents dans le YAML

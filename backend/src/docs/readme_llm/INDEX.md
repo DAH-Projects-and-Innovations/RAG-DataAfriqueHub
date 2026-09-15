@@ -75,7 +75,7 @@ llm = create_llm("ollama", "llama2")  # ou "openai", "gpt-4"
 engine = RAGEngine(
     retriever=your_retriever,  # Depuis Tâche 3
     llm=llm,
-    prompt_manager=create_default_prompt_manager()
+    prompt_manager=create_default_prompt_manager(),
 )
 
 # 3. Utiliser
@@ -194,22 +194,19 @@ print(response.answer)
 ### 1. Multi-Provider LLM
 ```python
 # Facile de changer de provider
-llm = create_llm("ollama", "llama2")      # Gratuit, local
-llm = create_llm("openai", "gpt-4")       # Meilleure qualité
-llm = create_llm("anthropic", "claude-3") # Excellent pour citations
+llm = create_llm("ollama", "llama2")  # Gratuit, local
+llm = create_llm("openai", "gpt-4")  # Meilleure qualité
+llm = create_llm("anthropic", "claude-3")  # Excellent pour citations
 ```
 
 ### 2. RAG avec Citations
 ```python
 # Citations automatiques
-response = engine.query(RAGQuery(
-    question="What is Python?",
-    include_citations=True
-))
+response = engine.query(RAGQuery(question="What is Python?", include_citations=True))
 
 # Output:
 # "Python is a programming language [1] created in 1991 [2]."
-# 
+#
 # Sources:
 # [1] Python Introduction (python.org)
 # [2] History of Python (wikipedia.org)
@@ -218,11 +215,7 @@ response = engine.query(RAGQuery(
 ### 3. Protection Anti-Hallucination
 ```python
 # Configuration sécurisée
-config = RAGConfig(
-    prevent_hallucinations=True,
-    require_sources=True,
-    min_relevance_score=0.7
-)
+config = RAGConfig(prevent_hallucinations=True, require_sources=True, min_relevance_score=0.7)
 
 # Réponse si pas de sources trouvées:
 # "I don't have enough information in my knowledge base..."
@@ -231,17 +224,14 @@ config = RAGConfig(
 ### 4. Prompts Configurables
 ```python
 # Utiliser un prompt prédéfini
-manager.render_template(
-    "technical_doc_system",
-    sources="..."
-)
+manager.render_template("technical_doc_system", sources="...")
 
 # Créer un prompt personnalisé
 custom = PromptTemplate(
     name="my_prompt",
     version="1.0",
     template="You are a {role}. {context}",
-    variables=["role", "context"]
+    variables=["role", "context"],
 )
 ```
 
@@ -322,7 +312,7 @@ response = engine.query(RAGQuery(question="..."))
 
 ---
 
-**Version** : 1.0.0  
-**Date** : 2024  
-**Status** : ✅ Production-ready  
+**Version** : 1.0.0
+**Date** : 2024
+**Status** : ✅ Production-ready
 **Support** : Ollama (gratuit) + OpenAI + Anthropic + HuggingFace

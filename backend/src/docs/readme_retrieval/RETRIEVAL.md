@@ -73,10 +73,7 @@ from src.core.models import Query
 
 # Créer une stratégie dense
 strategy = create_retriever(
-    mode="dense",
-    vector_store=my_vector_store,
-    embedder=my_embedder,
-    documents=documents
+    mode="dense", vector_store=my_vector_store, embedder=my_embedder, documents=documents
 )
 
 # Exécuter une requête
@@ -101,15 +98,12 @@ config = RetrievalConfig(
     hybrid_fusion_strategy="rrf",  # Reciprocal Rank Fusion
     enable_reranking=True,
     reranker_type="cross-encoder",
-    reranker_top_k=10
+    reranker_top_k=10,
 )
 
 # Créer la stratégie
 strategy = RetrievalStrategy(
-    vector_store=my_vector_store,
-    embedder=my_embedder,
-    documents=documents,
-    config=config
+    vector_store=my_vector_store, embedder=my_embedder, documents=documents, config=config
 )
 
 # Récupérer avec reranking
@@ -123,7 +117,7 @@ import yaml
 from src.retrieval import RetrievalConfig, create_retriever
 
 # Charger la config
-with open('configs/retrieval/hybrid_rerank.yaml') as f:
+with open("configs/retrieval/hybrid_rerank.yaml") as f:
     config_dict = yaml.safe_load(f)
 
 config = RetrievalConfig.from_dict(config_dict)
@@ -134,7 +128,7 @@ strategy = create_retriever(
     vector_store=my_vector_store,
     embedder=my_embedder,
     documents=documents,
-    config=config_dict
+    config=config_dict,
 )
 ```
 
@@ -247,18 +241,11 @@ results = strategy.retrieve(query)
 ```python
 # Configuration avec filtres
 config = RetrievalConfig(
-    mode=RetrievalMode.DENSE,
-    metadata_filters={
-        "language": "python",
-        "level": "beginner"
-    }
+    mode=RetrievalMode.DENSE, metadata_filters={"language": "python", "level": "beginner"}
 )
 
 # Ou à la requête
-results = strategy.retrieve(
-    query,
-    filters={"language": "python"}
-)
+results = strategy.retrieve(query, filters={"language": "python"})
 ```
 
 ### Filtres avancés (opérateurs)
@@ -266,9 +253,9 @@ results = strategy.retrieve(
 ```python
 # Opérateurs supportés: $eq, $ne, $gt, $gte, $lt, $lte, $in, $nin
 filters = {
-    "year": {"$gte": 2023},              # Année >= 2023
-    "language": {"$in": ["python", "js"]}, # Python OU JavaScript
-    "deprecated": {"$ne": True}          # Pas deprecated
+    "year": {"$gte": 2023},  # Année >= 2023
+    "language": {"$in": ["python", "js"]},  # Python OU JavaScript
+    "deprecated": {"$ne": True},  # Pas deprecated
 }
 
 results = strategy.retrieve(query, filters=filters)
@@ -400,21 +387,21 @@ reranking:
 
 ```python
 # Dense
-similarity_threshold: 0.5-0.8  # Plus élevé = plus strict
-top_k: 5-20                     # Selon besoin
+similarity_threshold: 0.5 - 0.8  # Plus élevé = plus strict
+top_k: 5 - 20  # Selon besoin
 
 # BM25
-k1: 1.2-2.0    # Saturation (1.5 standard)
-b: 0.0-1.0     # Normalisation longueur (0.75 standard)
+k1: 1.2 - 2.0  # Saturation (1.5 standard)
+b: 0.0 - 1.0  # Normalisation longueur (0.75 standard)
 
 # Hybrid
-dense_weight: 0.5-0.7  # Favoriser sémantique
-bm25_weight: 0.3-0.5   # Pour termes exacts
+dense_weight: 0.5 - 0.7  # Favoriser sémantique
+bm25_weight: 0.3 - 0.5  # Pour termes exacts
 fusion_strategy: "rrf"  # Recommandé
 
 # Reranking
-top_k_per_retriever: 20-50  # Large rappel avant rerank
-reranker_top_k: 5-10        # Final top-k
+top_k_per_retriever: 20 - 50  # Large rappel avant rerank
+reranker_top_k: 5 - 10  # Final top-k
 ```
 
 ---
@@ -478,6 +465,6 @@ Pour questions ou bugs :
 
 ---
 
-**Version**: 1.0.0  
-**Date**: 2024  
+**Version**: 1.0.0
+**Date**: 2024
 **Status**: ✅ Production-ready

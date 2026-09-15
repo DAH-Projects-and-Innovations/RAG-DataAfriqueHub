@@ -12,9 +12,10 @@ Lancement :
     pytest src/tests/test_config_validation.py -v
 """
 
-import sys
 import os
+import sys
 import tempfile
+
 import pytest
 
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -22,13 +23,10 @@ if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
 from src.core.config_schema import (
-    PipelineConfigSchema,
     ComponentConfig,
-    PipelineMetaConfig,
-    ModelEntry,
+    PipelineConfigSchema,
 )
 from src.core.factory import RAGPipelineFactory
-
 
 # ─── Config minimale valide ───────────────────────────────────────────────────
 
@@ -42,6 +40,7 @@ VALID_CONFIG = {
 
 
 # ─── Tests ComponentConfig ────────────────────────────────────────────────────
+
 
 class TestComponentConfig:
     def test_valid_component(self):
@@ -63,6 +62,7 @@ class TestComponentConfig:
 
 
 # ─── Tests PipelineConfigSchema ───────────────────────────────────────────────
+
 
 class TestPipelineConfigSchema:
     def test_valid_config_passes(self):
@@ -108,7 +108,14 @@ class TestPipelineConfigSchema:
     def test_models_list_populated(self):
         config = {
             **VALID_CONFIG,
-            "models": [{"id": "gpt-4o-mini", "label": "GPT-4o mini", "provider": "openai", "default": True}],
+            "models": [
+                {
+                    "id": "gpt-4o-mini",
+                    "label": "GPT-4o mini",
+                    "provider": "openai",
+                    "default": True,
+                }
+            ],
         }
         schema = PipelineConfigSchema(**config)
         assert len(schema.models) == 1
@@ -119,7 +126,10 @@ class TestPipelineConfigSchema:
         """vector_store ne doit pas être défini dans retriever.params du YAML."""
         config = {
             **VALID_CONFIG,
-            "retriever": {"name": "vector_retriever", "params": {"vector_store": "chroma"}},
+            "retriever": {
+                "name": "vector_retriever",
+                "params": {"vector_store": "chroma"},
+            },
         }
         with pytest.raises(Exception, match="vector_store"):
             PipelineConfigSchema(**config)
@@ -135,6 +145,7 @@ class TestPipelineConfigSchema:
 
 
 # ─── Tests factory._replace_env_vars ─────────────────────────────────────────
+
 
 class TestEnvVarSubstitution:
     def test_replaces_existing_env_var(self):
@@ -170,6 +181,7 @@ class TestEnvVarSubstitution:
 
 
 # ─── Tests factory.load_config ────────────────────────────────────────────────
+
 
 class TestLoadConfig:
     def _write_yaml(self, content: str) -> str:
@@ -234,12 +246,14 @@ prompt_managers:
 
 # ─── Tests IVectorStore.delete ────────────────────────────────────────────────
 
+
 class TestChromaVectorStoreDelete:
     """Teste la méthode delete() de ChromaVectorStore avec un mock de collection."""
 
     def test_delete_calls_collection_delete(self):
-        from src.vectorstores.chroma_store import ChromaVectorStore
         from unittest.mock import MagicMock, patch
+
+        from src.vectorstores.chroma_store import ChromaVectorStore
 
         with patch("src.vectorstores.chroma_store.chromadb") as mock_chroma:
             mock_client = MagicMock()
@@ -253,8 +267,9 @@ class TestChromaVectorStoreDelete:
             mock_collection.delete.assert_called_once_with(where={"filename": "test.pdf"})
 
     def test_delete_empty_filter_raises(self):
-        from src.vectorstores.chroma_store import ChromaVectorStore
         from unittest.mock import MagicMock, patch
+
+        from src.vectorstores.chroma_store import ChromaVectorStore
 
         with patch("src.vectorstores.chroma_store.chromadb") as mock_chroma:
             mock_client = MagicMock()
@@ -269,13 +284,16 @@ class TestChromaVectorStoreDelete:
 
 # ─── Tests SemanticChunker ────────────────────────────────────────────────────
 
+
 class TestSemanticChunker:
     """Teste le SemanticChunker avec un embedder mocké."""
 
     def _get_chunker_with_mock_model(self):
-        from src.Chunkers.semantic_chunker import SemanticChunker
         from unittest.mock import MagicMock
+
         import numpy as np
+
+        from src.chunkers.semantic_chunker import SemanticChunker
 
         chunker = SemanticChunker(breakpoint_threshold=0.5, max_chunk_size=200, min_chunk_size=10)
 
@@ -287,6 +305,7 @@ class TestSemanticChunker:
 
     def test_chunks_non_empty_text(self):
         from src.core.models import Document
+
         chunker = self._get_chunker_with_mock_model()
         doc = Document(
             content=(
@@ -306,6 +325,7 @@ class TestSemanticChunker:
 
     def test_empty_document_skipped(self):
         from src.core.models import Document
+
         chunker = self._get_chunker_with_mock_model()
         doc = Document(content="", metadata={})
         chunks = chunker.chunk([doc])
@@ -313,6 +333,7 @@ class TestSemanticChunker:
 
     def test_very_short_text_returns_one_chunk(self):
         from src.core.models import Document
+
         chunker = self._get_chunker_with_mock_model()
         doc = Document(content="Phrase courte.", metadata={})
         chunks = chunker.chunk([doc])
@@ -320,12 +341,13 @@ class TestSemanticChunker:
         assert len(chunks) <= 1
 
     def test_fallback_on_embed_error(self):
-        from src.Chunkers.semantic_chunker import SemanticChunker
+        from src.chunkers.semantic_chunker import SemanticChunker
         from src.core.models import Document
 
         chunker = SemanticChunker(max_chunk_size=100, min_chunk_size=5)
         # Forcer une erreur d'embedding
         from unittest.mock import MagicMock
+
         mock_model = MagicMock()
         mock_model.encode.side_effect = RuntimeError("GPU indisponible")
         chunker._model = mock_model
@@ -343,6 +365,7 @@ class TestSemanticChunker:
 
 if __name__ == "__main__":
     import subprocess
+
     subprocess.run(
         ["pytest", __file__, "-v", "--tb=short"],
         cwd=BACKEND_DIR,

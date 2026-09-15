@@ -9,36 +9,43 @@ Lancement :
     pytest src/tests/test_integration_pipeline.py -v
 """
 
-import sys
 import os
-from unittest.mock import MagicMock, patch
-from typing import List
-
-import pytest
+import sys
+from unittest.mock import MagicMock
 
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
-from src.core.models import Document, Chunk, Query, RAGResponse
+from src.core.models import Chunk, Document, RAGResponse
 from src.core.orchestrator import RAGPipeline
-
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
+
 def _make_chunk(content: str, filename: str = "test.pdf") -> Chunk:
-    return Chunk(content=content, doc_id="doc-1", metadata={"filename": filename, "source": filename})
+    return Chunk(
+        content=content,
+        doc_id="doc-1",
+        metadata={"filename": filename, "source": filename},
+    )
 
 
 def _make_pipeline(
     llm_answer: str = "Réponse générée.",
-    retrieved_docs: List[Document] | None = None,
+    retrieved_docs: list[Document] | None = None,
 ) -> RAGPipeline:
     """Crée un pipeline avec tous les composants mockés."""
     if retrieved_docs is None:
         retrieved_docs = [
-            Document(content="Le RAG combine recherche et génération.", metadata={"filename": "test.pdf"}),
-            Document(content="Les embeddings représentent le sens des phrases.", metadata={"filename": "test.pdf"}),
+            Document(
+                content="Le RAG combine recherche et génération.",
+                metadata={"filename": "test.pdf"},
+            ),
+            Document(
+                content="Les embeddings représentent le sens des phrases.",
+                metadata={"filename": "test.pdf"},
+            ),
         ]
 
     embedder = MagicMock()
@@ -66,6 +73,7 @@ def _make_pipeline(
 
 
 # ─── Tests ingest ─────────────────────────────────────────────────────────────
+
 
 class TestPipelineIngest:
     def test_ingest_calls_loader_chunker_embedder_store(self):
@@ -110,6 +118,7 @@ class TestPipelineIngest:
 
 
 # ─── Tests query ──────────────────────────────────────────────────────────────
+
 
 class TestPipelineQuery:
     def test_query_returns_rag_response(self):
@@ -176,13 +185,14 @@ class TestPipelineQuery:
 
 # ─── Tests delete_document ────────────────────────────────────────────────────
 
+
 class TestPipelineDeleteDocument:
     def test_delete_calls_vector_store_delete(self):
         pipeline = _make_pipeline()
         pipeline.vector_store.delete = MagicMock()
 
         result = pipeline.delete_document("rapport.pdf")
-        pipeline.vector_store.delete.assert_called_once_with(where={"source": "rapport.pdf"})
+        pipeline.vector_store.delete.assert_called_once_with(where={"filename": "rapport.pdf"})
         assert result is True
 
     def test_delete_returns_false_on_error(self):
@@ -194,6 +204,7 @@ class TestPipelineDeleteDocument:
 
 
 # ─── Tests get_stats ──────────────────────────────────────────────────────────
+
 
 class TestPipelineGetStats:
     def test_get_stats_returns_dict(self):
@@ -217,6 +228,7 @@ class TestPipelineGetStats:
 
 if __name__ == "__main__":
     import subprocess
+
     subprocess.run(
         ["pytest", __file__, "-v", "--tb=short"],
         cwd=BACKEND_DIR,
