@@ -40,7 +40,7 @@ dev = [
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-exclude = ["src/examples", "src/llm/old", "src/retrieval/examples"]
+exclude = ["src/examples", "src/retrieval/examples"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "W"]
