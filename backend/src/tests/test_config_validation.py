@@ -243,7 +243,9 @@ prompt_managers:
         with pytest.raises(FileNotFoundError):
             RAGPipelineFactory.load_config("/chemin/inexistant/config.yaml")
 
+
 # ─── Tests factory.create_from_config ────────────────────────────────────────────────
+
 
 class TestCreateFromConfig:
     def test_create_from_config_does_not_mutate_input_config(self):
@@ -258,6 +260,8 @@ class TestCreateFromConfig:
             RAGPipelineFactory.create_from_config(config)
 
         assert config == original_config
+
+
 # ─── Tests IVectorStore.delete ────────────────────────────────────────────────
 
 
