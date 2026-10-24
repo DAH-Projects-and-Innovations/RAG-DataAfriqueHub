@@ -170,7 +170,10 @@ class PineconeVectorStore(IVectorStore):
             meta = dict(match.get("metadata", {}))
             content = meta.pop("content", "")
             meta["score"] = float(match.get("score", 0.0))
-            docs.append(Document(content=content, metadata=meta))
+            # fix #9: réutiliser l'ID stable de Pinecone pour que la déduplication
+            # dans l'orchestrateur (seen_ids) fonctionne correctement.
+            stable_id = match.get("id")
+            docs.append(Document(content=content, metadata=meta, doc_id=stable_id))
 
         return docs
 

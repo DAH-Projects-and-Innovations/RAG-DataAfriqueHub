@@ -46,6 +46,8 @@ class ChromaVectorStore(IVectorStore):
         if results.get("documents"):
             docs_list = results.get("documents", [[]])[0]
             metadatas = results.get("metadatas", [[]])[0]
+            # fix #9: lire les IDs stables de Chroma pour la déduplication
+            ids = results.get("ids", [[]])[0]
             embeddings = (
                 results.get("embeddings", [[]])[0]
                 if results.get("embeddings")
@@ -63,7 +65,10 @@ class ChromaVectorStore(IVectorStore):
                 if distances and i < len(distances) and distances[i] is not None:
                     meta = {**meta, "score": float(distances[i])}
 
-                doc = Document(content=docs_list[i], metadata=meta)
+                # fix #9: passer l'ID stable du vector store pour que la
+                # déduplication dans l'orchestrateur fonctionne correctement
+                stable_id = ids[i] if i < len(ids) else None
+                doc = Document(content=docs_list[i], metadata=meta, doc_id=stable_id)
                 # si embedding fourni, on peut l'attacher comme attribut custom
                 if embeddings and i < len(embeddings):
                     doc.embedding = embeddings[i]
