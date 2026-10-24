@@ -184,6 +184,9 @@ class SemanticChunker(IChunker):
                 # Fallback : sliding window basique
                 size = kwargs.get("chunk_size", 500)
                 overlap = kwargs.get("chunk_overlap", 50)
+                # fix #10 : on valide aussi le fallback pour éviter la boucle infinie
+                from src.chunkers.basic_chunker import _validate_chunk_params
+                _validate_chunk_params(size, overlap)
                 grouped = []
                 start = 0
                 while start < len(text):
