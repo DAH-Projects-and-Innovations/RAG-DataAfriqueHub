@@ -2,27 +2,22 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-// En-tête d'authentification optionnel (défini via VITE_API_KEY dans .env)
-const authHeaders = () => {
-  const key = import.meta.env.VITE_API_KEY;
-  return key ? { 'X-API-Key': key } : {};
-};
+// NOTE SÉCURITÉ : Ne jamais passer une clé partagée (X-API-Key) depuis le
+// frontend. Toute variable VITE_* est inscrite en clair dans le bundle JS
+// public et lisible par n'importe qui via les DevTools du navigateur.
+// L'accès au backend est contrôlé par la politique CORS côté serveur.
 
 export const apiService = {
 
   /** Récupère la liste des modèles disponibles depuis le backend (section models du YAML). */
   getModels: async () => {
-    const response = await axios.get(`${API_BASE_URL}/models`, {
-      headers: authHeaders(),
-    });
+    const response = await axios.get(`${API_BASE_URL}/models`);
     return response.data; // [{ id, label, provider, default }]
   },
 
   deleteFile: async (fileName) => {
     const encodedName = encodeURIComponent(fileName);
-    const response = await axios.delete(`${API_BASE_URL}/ingest/${encodedName}`, {
-      headers: authHeaders(),
-    });
+    const response = await axios.delete(`${API_BASE_URL}/ingest/${encodedName}`);
     return response.data;
   },
 
@@ -40,7 +35,6 @@ export const apiService = {
     };
 
     const response = await axios.post(`${API_BASE_URL}/query`, payload, {
-      headers: authHeaders(),
       signal: config.signal,
     });
     return response.data;
@@ -49,9 +43,7 @@ export const apiService = {
   uploadFile: async (file) => {
     const formData = new FormData();
     formData.append("files", file);
-    const response = await axios.post(`${API_BASE_URL}/ingest`, formData, {
-      headers: authHeaders(),
-    });
+    const response = await axios.post(`${API_BASE_URL}/ingest`, formData);
     return response.data;
   },
 };
