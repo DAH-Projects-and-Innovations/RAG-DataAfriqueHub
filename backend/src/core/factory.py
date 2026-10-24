@@ -135,7 +135,7 @@ class RAGPipelineFactory:
         llm_config['params']['provider'] = llm_config['name'] # ex: 'ollama'
 
         llm = cls._create_component('llms', llm_config)
-        
+
         # Chunker optionnel (si absent, la route ingest utilisera ConfigurableChunker par défaut)
         chunker = None
         if "chunker" in config:
@@ -150,7 +150,7 @@ class RAGPipelineFactory:
 
             query_rewriter_config['params']['llm'] = llm
             query_rewriter = cls._create_component('query_rewriters', query_rewriter_config)
-        
+
         reranker = None
         if "reranker" in config:
             reranker = cls._create_component("rerankers", config["reranker"])
