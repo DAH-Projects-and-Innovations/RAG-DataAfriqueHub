@@ -1,15 +1,14 @@
 # backend/src/api/routes/ingest.py
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from pathlib import Path
-import re
 import shutil
 import uuid
-from typing import List
+from pathlib import Path
 
-from src.Chunkers.basic_chunker import ConfigurableChunker
-from src.Loaders.text_loader import UnifiedDocumentLoader
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+
 from src.api.dependencies import get_pipeline
+from src.chunkers.basic_chunker import ConfigurableChunker
+from src.loaders.text_loader import UnifiedDocumentLoader
 
 router = APIRouter(prefix="/ingest", tags=["Ingestion"])
 
@@ -24,7 +23,9 @@ BASE_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 @router.post("")
 async def ingest_uploaded_files(
-    files: List[UploadFile] = File(..., description="Upload un ou plusieurs fichiers (PDF, TXT, MD)"),
+    files: list[UploadFile] = File(
+        ..., description="Upload un ou plusieurs fichiers (PDF, TXT, MD)"
+    ),
     pipeline=Depends(get_pipeline),
 ):
     """
@@ -37,7 +38,7 @@ async def ingest_uploaded_files(
     # Dossier temporaire unique par requête — supprimé après ingestion
     upload_dir = BASE_UPLOAD_DIR / str(uuid.uuid4())
     upload_dir.mkdir(parents=True, exist_ok=True)
-    saved_files: List[str] = []
+    saved_files: list[str] = []
 
     for f in files:
         suffix = Path(f.filename).suffix.lower()
@@ -49,7 +50,7 @@ async def ingest_uploaded_files(
         if file_size is not None and file_size > MAX_FILE_BYTES:
             raise HTTPException(
                 status_code=413,
-                detail=f"{f.filename} dépasse la taille maximale autorisée ({MAX_FILE_BYTES // (1024*1024)} MB).",
+                detail=f"{f.filename} dépasse la taille maximale autorisée ({MAX_FILE_BYTES // (1024 * 1024)} MB).",
             )
 
         # Garder le nom original — on retire seulement les séparateurs de chemin (sécurité)
@@ -66,20 +67,23 @@ async def ingest_uploaded_files(
                 file_path.unlink(missing_ok=True)
                 raise HTTPException(
                     status_code=413,
-                    detail=f"{f.filename} dépasse la taille maximale autorisée ({MAX_FILE_BYTES // (1024*1024)} MB).",
+                    detail=f"{f.filename} dépasse la taille maximale autorisée ({MAX_FILE_BYTES // (1024 * 1024)} MB).",
                 )
             saved_files.append(f.filename)
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Erreur lors de la sauvegarde de {f.filename}: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Erreur lors de la sauvegarde de {f.filename}: {str(e)}",
+            ) from e
         finally:
             await f.close()
 
     if not saved_files:
         raise HTTPException(
             status_code=400,
-            detail=f"Aucun fichier valide. Formats acceptés : {', '.join(SUPPORTED_EXTENSIONS)}"
+            detail=f"Aucun fichier valide. Formats acceptés : {', '.join(SUPPORTED_EXTENSIONS)}",
         )
 
     # Utilise le chunker configuré dans le YAML si disponible, sinon fallback basique
@@ -87,12 +91,10 @@ async def ingest_uploaded_files(
 
     try:
         chunks_count = pipeline.ingest(
-            loader=UnifiedDocumentLoader(),
-            chunker=chunker,
-            source=str(upload_dir)
+            loader=UnifiedDocumentLoader(), chunker=chunker, source=str(upload_dir)
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors de l'ingestion : {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'ingestion : {str(e)}") from e
     finally:
         # Supprimer le dossier temporaire — les chunks sont désormais dans ChromaDB
         shutil.rmtree(upload_dir, ignore_errors=True)
@@ -106,17 +108,16 @@ async def ingest_uploaded_files(
 
 
 @router.delete("/{file_name}")
-async def delete_file(
-    file_name: str, 
-    pipeline=Depends(get_pipeline)
-):
+async def delete_file(file_name: str, pipeline=Depends(get_pipeline)):
     """
     Supprime un document de la base de connaissances (Vector Store).
     """
     try:
         success = pipeline.delete_document(file_name)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors de la suppression : {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erreur lors de la suppression : {str(e)}"
+        ) from e
 
     if not success:
         raise HTTPException(status_code=404, detail="Document non trouvé dans l'index.")

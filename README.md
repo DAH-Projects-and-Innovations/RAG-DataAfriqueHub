@@ -261,16 +261,16 @@ RAG-DataAfriqueHub/
 │       │   └── config_schema.py    # Validation Pydantic des YAML au démarrage
 │       ├── implementations/
 │       │   └── __init__.py         # Enregistrement de tous les composants
-│       ├── Embedders/
+│       ├── embedders/
 │       │   ├── dummy_embedder.py   # LocalSentenceEmbedder (SentenceTransformers)
 │       │   └── openai_embedder.py  # OpenAIEmbedder (text-embedding-3-large)
 │       ├── vectorstores/
 │       │   ├── chroma_store.py     # ChromaVectorStore
 │       │   ├── simple_store.py     # FAISSVectorStore (in-memory)
 │       │   └── pinecone_store.py   # PineconeVectorStore
-│       ├── Loaders/
+│       ├── loaders/
 │       │   └── text_loader.py      # UnifiedDocumentLoader (PDF, TXT, MD)
-│       ├── Chunkers/
+│       ├── chunkers/
 │       │   ├── basic_chunker.py    # ConfigurableChunker (sliding window)
 │       │   └── semantic_chunker.py # SemanticChunker (cosine breakpoints)
 │       ├── retrieval/
@@ -490,7 +490,7 @@ pipeline_config:
 ### 1. Implémenter l'interface
 
 ```python
-# backend/src/Embedders/cohere_embedder.py
+# backend/src/embedders/cohere_embedder.py
 import logging
 from typing import List
 import cohere
@@ -519,7 +519,7 @@ class CohereEmbedder(IEmbedder):
 
 ```python
 # backend/src/implementations/__init__.py
-from src.Embedders.cohere_embedder import CohereEmbedder
+from src.embedders.cohere_embedder import CohereEmbedder
 
 def register_all_components():
     # ...

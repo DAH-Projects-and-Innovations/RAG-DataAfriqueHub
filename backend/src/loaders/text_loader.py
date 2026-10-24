@@ -1,18 +1,20 @@
 import logging
 import os
-from typing import List
-from pypdf import PdfReader
+
 from langdetect import detect
+from pypdf import PdfReader
+
 from src.core.interfaces import IDocumentLoader
 from src.core.models import Document
 
 logger = logging.getLogger(__name__)
 
+
 class UnifiedDocumentLoader(IDocumentLoader):
-    def get_supported_formats(self) -> List[str]:
+    def get_supported_formats(self) -> list[str]:
         return ["pdf", "md", "txt"]
 
-    def load(self, source: str, **kwargs) -> List[Document]:
+    def load(self, source: str, **kwargs) -> list[Document]:
         all_documents = []
         # Supporter un dossier ou un fichier unique
         if os.path.isdir(source):
@@ -21,18 +23,18 @@ class UnifiedDocumentLoader(IDocumentLoader):
             files_to_process = [source]
 
         for file_path in files_to_process:
-            ext = file_path.split('.')[-1].lower()
+            ext = file_path.split(".")[-1].lower()
             if ext not in self.get_supported_formats():
                 continue
 
             content = ""
             try:
-                if ext == 'pdf':
+                if ext == "pdf":
                     reader = PdfReader(file_path)
                     pages = [p.extract_text() for p in reader.pages]
                     content = "\n".join([t for t in pages if t])
-                elif ext in ['md', 'txt']:
-                    with open(file_path, 'r', encoding='utf-8') as f:
+                elif ext in ["md", "txt"]:
+                    with open(file_path, encoding="utf-8") as f:
                         content = f.read()
             except Exception as e:
                 # Ignorer les fichiers qui posent problème mais continuer
@@ -47,14 +49,16 @@ class UnifiedDocumentLoader(IDocumentLoader):
             except Exception:
                 lang = "unknown"
 
-            all_documents.append(Document(
-                content=content,
-                metadata={
-                    "source": file_path,
-                    "filename": os.path.basename(file_path),
-                    "format": ext,
-                    "lang": lang,
-                }
-            ))
+            all_documents.append(
+                Document(
+                    content=content,
+                    metadata={
+                        "source": file_path,
+                        "filename": os.path.basename(file_path),
+                        "format": ext,
+                        "lang": lang,
+                    },
+                )
+            )
 
         return all_documents

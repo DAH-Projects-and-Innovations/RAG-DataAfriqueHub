@@ -85,7 +85,7 @@ llm = create_llm(
     provider="openai",  # ou "anthropic", "ollama", "huggingface"
     model="gpt-4o-mini",
     api_key="...",
-    temperature=0.7
+    temperature=0.7,
 )
 ```
 
@@ -103,7 +103,7 @@ template = PromptTemplate(
     template="...",
     variables=["context", "question"],
     description="...",
-    metadata={...}
+    metadata={...},
 )
 ```
 
@@ -225,6 +225,7 @@ system_prompt_template: "rag_safe_system"
 **1. System Prompts Stricts**
 ```python
 "Answer ONLY using information from the context"
+
 "Do not use your general knowledge"
 "Never make up information"
 ```
@@ -233,11 +234,7 @@ system_prompt_template: "rag_safe_system"
 ```python
 def _verify_context_usage(answer, sources) -> bool:
     # Détecte phrases hors-contexte
-    out_of_context_phrases = [
-        "based on my knowledge",
-        "in general",
-        "typically"
-    ]
+    out_of_context_phrases = ["based on my knowledge", "in general", "typically"]
     # Retourne False si détecté
 ```
 
@@ -258,7 +255,7 @@ if doc.score < config.min_relevance_score:
 def _evaluate_confidence() -> ConfidenceLevel:
     if "i don't know" in answer:
         return ConfidenceLevel.UNCERTAIN
-    
+
     if avg_relevance > 0.8 and citation_ratio > 0.5:
         return ConfidenceLevel.HIGH
     # ...
@@ -275,20 +272,20 @@ def _evaluate_confidence() -> ConfidenceLevel:
 class RAGResponse:
     # Texte
     answer: str
-    
+
     # Sources (avec citations)
     sources: List[Source]
     citations: List[Citation]
-    
+
     # Confiance
     confidence: ConfidenceLevel
     based_on_context: bool
-    
+
     # Génération
     model_used: str
     tokens_used: int
     generation_time_ms: float
-    
+
     # Métadonnées
     metadata: Dict[str, Any]
 ```
@@ -497,8 +494,8 @@ Le système est **production-ready** et prêt à être intégré dans le pipelin
 
 ---
 
-**Version** : 1.0.0  
-**Date** : 2024  
-**Status** : ✅ COMPLET - Production Ready  
-**Lignes de code** : ~2000 lignes (LLM + RAG + Prompts)  
+**Version** : 1.0.0
+**Date** : 2024
+**Status** : ✅ COMPLET - Production Ready
+**Lignes de code** : ~2000 lignes (LLM + RAG + Prompts)
 **Fichiers créés** : 14 fichiers

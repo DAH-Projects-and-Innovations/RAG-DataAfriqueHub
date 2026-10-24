@@ -1,9 +1,10 @@
-from fastapi import FastAPI, Depends, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from src.api.routes import query, ingest
-from src.api.routes.models import router as models_router
+
 from src.api.dependencies import get_pipeline, verify_api_key
+from src.api.routes import ingest, query
+from src.api.routes.models import router as models_router
 
 # Taille maximale autorisée pour les uploads (50 MB)
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
@@ -35,9 +36,12 @@ async def limit_upload_size(request: Request, call_next):
     if content_length and int(content_length) > MAX_UPLOAD_BYTES:
         return JSONResponse(
             status_code=413,
-            content={"detail": f"Fichier trop volumineux. Taille maximale : {MAX_UPLOAD_BYTES // (1024*1024)} MB."},
+            content={
+                "detail": f"Fichier trop volumineux. Taille maximale : {MAX_UPLOAD_BYTES // (1024 * 1024)} MB."
+            },
         )
     return await call_next(request)
+
 
 app.include_router(query.router)
 app.include_router(ingest.router)
@@ -51,4 +55,5 @@ def health(pipeline=Depends(get_pipeline)):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

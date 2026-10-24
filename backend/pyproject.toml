@@ -30,3 +30,32 @@ dependencies = [
     "tenacity>=8.0.0",
     "accelerate>=1.13.0",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8.0",
+    "pre-commit>=4.0.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = ["src/examples", "src/llm/old", "src/retrieval/examples"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "W"]
+# E501: la longueur de ligne est déléguée au formatter.
+# B008: idiome FastAPI standard (Depends(), File(), ... dans les valeurs par défaut).
+ignore = ["E501", "B008"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.lint.per-file-ignores]
+# Les fichiers de test insèrent le dossier backend dans sys.path avant les
+# imports `src.*`, et utilisent volontairement des pytest.raises(Exception)
+# larges pour ces vérifications de configuration.
+"src/tests/*" = ["E402", "B017"]
+
+[tool.ruff.format]
+quote-style = "double"

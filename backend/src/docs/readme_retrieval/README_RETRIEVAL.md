@@ -47,11 +47,7 @@ from src.retrieval import create_retriever
 from src.core.models import Query
 
 # Créer un retriever dense
-strategy = create_retriever(
-    mode="dense",
-    vector_store=my_vector_store,
-    embedder=my_embedder
-)
+strategy = create_retriever(mode="dense", vector_store=my_vector_store, embedder=my_embedder)
 
 # Rechercher
 results = strategy.retrieve(Query(text="What is Python?"))
@@ -67,14 +63,11 @@ config = RetrievalConfig(
     mode=RetrievalMode.HYBRID,
     hybrid_fusion_strategy="rrf",  # Reciprocal Rank Fusion
     enable_reranking=True,
-    reranker_type="cross-encoder"
+    reranker_type="cross-encoder",
 )
 
 strategy = RetrievalStrategy(
-    vector_store=my_vector_store,
-    embedder=my_embedder,
-    documents=my_documents,
-    config=config
+    vector_store=my_vector_store, embedder=my_embedder, documents=my_documents, config=config
 )
 
 results = strategy.retrieve(query)
@@ -86,7 +79,7 @@ results = strategy.retrieve(query)
 import yaml
 
 # Charger une config prête à l'emploi
-with open('configs/retrieval/hybrid_rerank.yaml') as f:
+with open("configs/retrieval/hybrid_rerank.yaml") as f:
     config_dict = yaml.safe_load(f)
 
 config = RetrievalConfig.from_dict(config_dict)
@@ -112,21 +105,10 @@ strategy = RetrievalStrategy(..., config=config)
 
 ```python
 # Filtres simples
-config = RetrievalConfig(
-    metadata_filters={
-        "language": "python",
-        "level": "beginner"
-    }
-)
+config = RetrievalConfig(metadata_filters={"language": "python", "level": "beginner"})
 
 # Filtres avancés
-results = strategy.retrieve(
-    query,
-    filters={
-        "year": {"$gte": 2023},
-        "tags": {"$in": ["AI", "ML"]}
-    }
-)
+results = strategy.retrieve(query, filters={"year": {"$gte": 2023}, "tags": {"$in": ["AI", "ML"]}})
 ```
 
 ### Changement dynamique de configuration
@@ -274,14 +256,14 @@ Production, critique, multilingue
 ```python
 # Pour + de rappel (trouver plus de docs)
 top_k_per_retriever: 50  # au lieu de 20
-reranker_top_k: 20       # au lieu de 10
+reranker_top_k: 20  # au lieu de 10
 
 # Pour + de précision (filtrer plus)
 similarity_threshold: 0.8  # au lieu de 0.7
-reranker_min_score: 0.6   # au lieu de 0.5
+reranker_min_score: 0.6  # au lieu de 0.5
 
 # Pour + de vitesse
-enable_reranking: false   # désactiver si pas critique
+enable_reranking: false  # désactiver si pas critique
 fusion_strategy: "weighted_sum"  # plus rapide que RRF
 ```
 
@@ -356,6 +338,6 @@ MIT License - Voir [LICENSE](LICENSE) pour détails
 
 Développé dans le cadre du projet RAG modulaire
 
-**Version**: 1.0.0  
-**Date**: 2024  
+**Version**: 1.0.0
+**Date**: 2024
 **Status**: ✅ Production-ready

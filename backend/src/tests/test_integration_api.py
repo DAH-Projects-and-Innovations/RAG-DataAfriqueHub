@@ -9,10 +9,9 @@ Lancement :
     pytest src/tests/test_integration_api.py -v
 """
 
-import sys
 import os
+import sys
 from unittest.mock import MagicMock, patch
-from typing import List
 
 import pytest
 
@@ -25,8 +24,8 @@ from fastapi.testclient import TestClient
 
 from src.core.models import Document, RAGResponse
 
-
 # ─── Fixtures ────────────────────────────────────────────────────────────────
+
 
 def _make_mock_pipeline(answer: str = "Réponse de test.") -> MagicMock:
     """Crée un pipeline entièrement mocké."""
@@ -42,7 +41,12 @@ def _make_mock_pipeline(answer: str = "Réponse de test.") -> MagicMock:
     pipeline.get_stats.return_value = {"embedder": {"type": "Mock"}}
     pipeline.config = {
         "models": [
-            {"id": "mock-model", "label": "Mock Model", "provider": "mock", "default": True}
+            {
+                "id": "mock-model",
+                "label": "Mock Model",
+                "provider": "mock",
+                "default": True,
+            }
         ]
     }
     return pipeline
@@ -80,6 +84,7 @@ def client_with_auth():
 
 # ─── Tests /health ────────────────────────────────────────────────────────────
 
+
 class TestHealthEndpoint:
     def test_health_returns_up(self, client):
         response = client.get("/health")
@@ -103,6 +108,7 @@ class TestHealthEndpoint:
 
 # ─── Tests /models ────────────────────────────────────────────────────────────
 
+
 class TestModelsEndpoint:
     def test_models_returns_list(self, client):
         response = client.get("/models")
@@ -120,6 +126,7 @@ class TestModelsEndpoint:
 
 
 # ─── Tests /query ─────────────────────────────────────────────────────────────
+
 
 class TestQueryEndpoint:
     def test_query_returns_answer(self, client):
@@ -180,6 +187,7 @@ class TestQueryEndpoint:
 
 # ─── Tests /ingest ────────────────────────────────────────────────────────────
 
+
 class TestIngestEndpoint:
     def test_ingest_no_files_returns_400(self, client):
         response = client.post("/ingest", files=[])
@@ -194,7 +202,11 @@ class TestIngestEndpoint:
 
     def test_ingest_valid_txt_file(self, client):
         txt_content = b"Ceci est un document de test. Il contient plusieurs phrases."
-        with patch("src.api.routes.ingest.pipeline") if False else __import__("contextlib").nullcontext():
+        with (
+            patch("src.api.routes.ingest.pipeline")
+            if False
+            else __import__("contextlib").nullcontext()
+        ):
             response = client.post(
                 "/ingest",
                 files={"files": ("rapport.txt", txt_content, "text/plain")},
@@ -228,6 +240,7 @@ class TestIngestEndpoint:
 
 if __name__ == "__main__":
     import subprocess
+
     subprocess.run(
         ["pytest", __file__, "-v", "--tb=short"],
         cwd=BACKEND_DIR,

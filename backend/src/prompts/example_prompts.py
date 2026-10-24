@@ -5,7 +5,6 @@ Exemples de templates adaptés à différents domaines et besoins.
 
 from src.llm.prompt_manager import PromptTemplate
 
-
 # ============================================================================
 # PROMPTS GÉNÉRIQUES
 # ============================================================================
@@ -26,7 +25,7 @@ Rules:
 Context:
 {context}""",
     description="Prompt générique pour questions-réponses",
-    variables=["context"]
+    variables=["context"],
 )
 
 
@@ -51,7 +50,7 @@ Guidelines:
 Technical Documentation:
 {sources}""",
     description="Prompt pour documentation technique",
-    variables=["sources"]
+    variables=["sources"],
 )
 
 MEDICAL_INFORMATION_SYSTEM = PromptTemplate(
@@ -74,7 +73,7 @@ Medical Information Sources:
 
 DISCLAIMER: This information is for educational purposes only. Always consult qualified healthcare professionals for medical advice.""",
     description="Prompt pour informations médicales (avec disclaimers)",
-    variables=["sources"]
+    variables=["sources"],
 )
 
 LEGAL_RESEARCH_SYSTEM = PromptTemplate(
@@ -96,7 +95,7 @@ IMPORTANT: This is legal information, not legal advice. Consult a qualified atto
 Legal Sources:
 {sources}""",
     description="Prompt pour recherche juridique",
-    variables=["sources"]
+    variables=["sources"],
 )
 
 CUSTOMER_SUPPORT_SYSTEM = PromptTemplate(
@@ -118,7 +117,7 @@ Knowledge Base:
 
 If you cannot resolve the issue, say: "I'd like to escalate this to a specialist who can help you further.""",
     description="Prompt pour support client",
-    variables=["context", "company_name"]
+    variables=["context", "company_name"],
 )
 
 
@@ -143,7 +142,7 @@ Guidelines:
 Context:
 {context}""",
     description="Prompt pour explications simples (ELI5)",
-    variables=["context"]
+    variables=["context"],
 )
 
 DETAILED_ANALYSIS_SYSTEM = PromptTemplate(
@@ -164,7 +163,7 @@ Be comprehensive but organized. Cite all sources.
 Sources:
 {sources}""",
     description="Prompt pour analyses détaillées",
-    variables=["sources"]
+    variables=["sources"],
 )
 
 COMPARATIVE_ANALYSIS_SYSTEM = PromptTemplate(
@@ -184,7 +183,7 @@ Structure:
 Sources:
 {sources}""",
     description="Prompt pour analyses comparatives",
-    variables=["sources"]
+    variables=["sources"],
 )
 
 
@@ -208,7 +207,7 @@ Important:
 Context:
 {context}""",
     description="Prompt pour support multilingue",
-    variables=["context"]
+    variables=["context"],
 )
 
 
@@ -231,7 +230,7 @@ Context:
 
 Tone: Natural, friendly, but still accurate. Cite sources [1], [2] casually.""",
     description="Prompt pour conversations naturelles avec historique",
-    variables=["context", "history"]
+    variables=["context", "history"],
 )
 
 
@@ -258,7 +257,7 @@ Required JSON structure:
 Context:
 {context}""",
     description="Prompt pour réponses structurées en JSON",
-    variables=["context"]
+    variables=["context"],
 )
 
 BULLET_POINTS_SYSTEM = PromptTemplate(
@@ -274,7 +273,7 @@ Answer the question using the context below. Format your response as:
 Context:
 {context}""",
     description="Prompt pour réponses en bullet points",
-    variables=["context"]
+    variables=["context"],
 )
 
 
@@ -303,7 +302,7 @@ Format:
 - Evidence: ...
 - Confidence: [High/Medium/Low]""",
     description="Prompt pour vérification de faits",
-    variables=["claim", "sources"]
+    variables=["claim", "sources"],
 )
 
 
@@ -324,7 +323,7 @@ ALL_EXAMPLE_PROMPTS = [
     CONVERSATIONAL_SYSTEM,
     STRUCTURED_JSON_SYSTEM,
     BULLET_POINTS_SYSTEM,
-    FACT_CHECK_SYSTEM
+    FACT_CHECK_SYSTEM,
 ]
 
 

@@ -6,17 +6,23 @@ import Swal from 'sweetalert2';
 import LogoAfriqueHub from './assets/logo-afrique-hub.jpeg';
 import { apiService } from './services/api';
 
+function safeParseArray(key) {
+  try {
+    const saved = localStorage.getItem(key);
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    try { localStorage.removeItem(key); } catch { /* storage unavailable */ }
+    return [];
+  }
+}
+
 function App() {
   // --- ÉTATS ---
-  const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem('chat_history');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [messages, setMessages] = useState(() => safeParseArray('chat_history'));
 
-  const [uploadedFiles, setUploadedFiles] = useState(() => {
-    const saved = localStorage.getItem('indexed_files');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [uploadedFiles, setUploadedFiles] = useState(() => safeParseArray('indexed_files'));
 
   const [input, setInput] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -24,8 +30,8 @@ function App() {
   const [error, setError] = useState(null);
 
   // ÉTATS FICHIERS
-  const [filesToUpload, setFilesToUpload] = useState([]); 
-  //const [uploadedFiles, setUploadedFiles] = useState([]); 
+  const [filesToUpload, setFilesToUpload] = useState([]);
+  //const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
 
   // CONFIGURATION RAG
@@ -66,19 +72,19 @@ function App() {
     });
   }, []);
 
-  //LOGIQUE D'UPLOAD 
+  //LOGIQUE D'UPLOAD
 
   const handleFileSelection = (event) => {
     const selectedFiles = Array.from(event.target.files);
     setFilesToUpload(prev => [...prev, ...selectedFiles]);
-    event.target.value = null; 
+    event.target.value = null;
   };
 
   const removeFileFromQueue = (index) => {
     setFilesToUpload(prev => prev.filter((_, i) => i !== index));
   };
 
-  const processIngestion = async () => {
+  /*const processIngestion = async () => {
     if (filesToUpload.length === 0) return;
     setIsUploading(true);
     let successCount = 0;
@@ -96,9 +102,47 @@ function App() {
         icon: 'success',
         confirmButtonColor: '#2563eb'
       });
-      setFilesToUpload([]); 
+      setFilesToUpload([]);
     } catch (err) {
       Swal.fire({ title: 'Erreur', text: "Impossible d'indexer les documents.", icon: 'error' });
+    } finally {
+      setIsUploading(false);
+    }
+  };*/
+
+
+  const processIngestion = async () => {
+    if (filesToUpload.length === 0) return;
+    setIsUploading(true);
+    let successCount = 0;
+
+    try {
+      for (const file of filesToUpload) {
+        try {
+          const response = await apiService.uploadFile(file);
+          if (response && response.status === "success") {
+            setUploadedFiles(prev => [...prev, { name: file.name, size: file.size }]);
+            successCount++;
+          }
+        } catch (fileErr) {
+          console.error(`Erreur pour le fichier ${file.name}:`, fileErr);
+          // On continue avec le fichier suivant même si celui-ci échoue
+        }
+      }
+
+      if (successCount > 0) {
+        Swal.fire({
+          title: 'Documents Indexés !',
+          text: `${successCount} fichiers ont été ajoutés.`,
+          icon: 'success',
+          confirmButtonColor: '#2563eb'
+        });
+        setFilesToUpload([]);
+      } else {
+        Swal.fire({ title: 'Échec', text: "Aucun fichier n'a pu être indexé.", icon: 'warning' });
+      }
+    } catch (err) {
+       console.error("Erreur globale ingestion:", err);
     } finally {
       setIsUploading(false);
     }
@@ -109,7 +153,7 @@ function App() {
   const abortControllerRef = useRef(null);
   const textareaRef = useRef(null);
 
-  //  SAUVEGARDE AUTOMATIQUE 
+  //  SAUVEGARDE AUTOMATIQUE
   useEffect(() => {
     localStorage.setItem('chat_history', JSON.stringify(messages.slice(-50)));
   }, [messages]);
@@ -139,9 +183,9 @@ function App() {
     const rev = [...messages].slice().reverse();
     const lastAssistant = rev.find(m => m.role === 'assistant');
     const lastUser = rev.find(m => m.role === 'user');
-    // On suit l'ordre demandé: assistant puis utilisateur
-    if (lastAssistant) historySnapshot.push({ role: 'assistant', content: lastAssistant.content });
+    // Ordre correct : user puis assistant (le LLM attend cet ordre)
     if (lastUser) historySnapshot.push({ role: 'user', content: lastUser.content });
+    if (lastAssistant) historySnapshot.push({ role: 'assistant', content: lastAssistant.content });
 
     // 1. Reset UI
     setInput('');
@@ -159,11 +203,11 @@ function App() {
       });
 
       // 3. Créer la bulle assistant VIDE
-      setMessages(prev => [...prev, { 
-        id: assistantId, 
-        role: 'assistant', 
-        content: '', 
-        sources: data.sources 
+      setMessages(prev => [...prev, {
+        id: assistantId,
+        role: 'assistant',
+        content: '',
+        sources: data.sources
       }]);
 
 
@@ -207,7 +251,7 @@ function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  //  LOGIQUE DE SUPPRESSION 
+  //  LOGIQUE DE SUPPRESSION
   const handleDeleteFile = async (fileName) => {
     const result = await Swal.fire({
       title: 'Supprimer le document ?',
@@ -222,10 +266,10 @@ function App() {
     if (result.isConfirmed) {
       try {
         // APPEL API (Important : voir section Backend plus bas)
-        await apiService.deleteFile(fileName); 
+        await apiService.deleteFile(fileName);
         setUploadedFiles(prev => prev.filter(f => f.name !== fileName));
         Swal.fire('Supprimé !', 'Le fichier a été retiré.', 'success');
-      } catch (err) {
+      } catch {
         Swal.fire('Erreur', 'Impossible de supprimer le fichier côté serveur.', 'error');
       }
     }
@@ -238,9 +282,9 @@ function App() {
 
   return (
     <div className="flex h-screen bg-slate-50 text-slate-900 overflow-hidden relative font-sans">
-      
+
       {/* BOUTON TOGGLE SIDEBAR */}
-      <button 
+      <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         className={`fixed top-3 z-50 p-2 bg-blue-600 text-white rounded-full shadow-xl transition-all duration-300 hover:bg-blue-700
           ${isSidebarOpen ? 'left-72' : 'left-4'}`}
@@ -250,8 +294,8 @@ function App() {
 
       {/* OVERLAY MOBILE */}
       {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/30 z-30 lg:hidden backdrop-blur-sm" 
+        <div
+          className="fixed inset-0 bg-black/30 z-30 lg:hidden backdrop-blur-sm"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -268,7 +312,7 @@ function App() {
         </div>
 
         <div className="space-y-6 overflow-y-auto max-h-[calc(100vh-120px)] pr-2 custom-scrollbar">
-          
+
           {/* SECTION UPLOAD */}
           <div>
             <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Documents</h3>
@@ -293,7 +337,7 @@ function App() {
                     </div>
                   ))}
                 </div>
-                <button 
+                <button
                   onClick={processIngestion}
                   disabled={isUploading}
                   className="w-full py-2 bg-blue-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all"
@@ -303,7 +347,7 @@ function App() {
               </div>
             )}
 
-            
+
             {/* Déjà Indexés (Gris) */}
             {uploadedFiles.length > 0 && (
               <div className="pt-4 border-t border-slate-100">
@@ -313,9 +357,9 @@ function App() {
                     <div key={i} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg text-[10px] text-slate-500 italic">
                       <Database size={12} className="text-blue-400 shrink-0"/>
                       <span className="truncate flex-1">{f.name}</span>
-                      
+
                       {/* BOUTON TOUJOURS VISIBLE */}
-                      <button 
+                      <button
                         onClick={() => handleDeleteFile(f.name)}
                         className="p-1 text-slate-400 hover:text-red-500 transition-colors"
                         title="Supprimer de l'index"
@@ -326,7 +370,7 @@ function App() {
                   ))}
                 </div>
               </div>
-            )} 
+            )}
           </div>
 
           {/* CONFIGURATION */}
@@ -345,7 +389,7 @@ function App() {
                 <option key={m.id} value={m.id}>{m.label}</option>
               ))}
             </select>
-            
+
             <div className="mt-3 flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-100">
               <input type="checkbox" id="rerank" checked={rerankEnabled} onChange={(e) => setRerankEnabled(e.target.checked)} className="accent-blue-600" />
               <label htmlFor="rerank" className="text-sm font-medium text-slate-600 cursor-pointer">Re-ranking activé</label>
@@ -383,7 +427,7 @@ function App() {
               <p className="text-lg font-medium">Posez une question sur vos documents</p>
             </div>
           )}
-          
+
           {messages.map((m) => (
             <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}>
              {/* <div className={`max-w-[90%] md:max-w-2xl p-4 rounded-2xl shadow-sm text-sm leading-relaxed
@@ -461,8 +505,8 @@ function App() {
                     )}
                   </div>
                 )}
-              </div> 
-              
+              </div>
+
             </div>
           ))}
           {isTyping && (
@@ -480,7 +524,7 @@ function App() {
         <footer className="p-4 bg-white border-t border-slate-200">
           <div className="max-w-4xl mx-auto flex gap-2 items-center bg-slate-100 p-2 rounded-2xl border border-slate-200 focus-within:ring-2 focus-within:ring-blue-400 transition-all">
             <textarea
-              ref={textareaRef} 
+              ref={textareaRef}
               className="flex-1 p-2 bg-transparent outline-none text-sm resize-none max-h-32"
               placeholder="Écrivez votre message..."
               rows="1"
@@ -521,4 +565,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;

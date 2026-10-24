@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 Question générale
+    url: ../../discussions
+    about: Pour une question qui n'est ni un bug ni une proposition de fonctionnalité, utilise les Discussions.

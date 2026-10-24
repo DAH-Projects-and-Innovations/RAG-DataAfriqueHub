@@ -66,18 +66,14 @@ from src.rag import RAGEngine, RAGQuery, RAGConfig
 from src.llm import create_llm, create_default_prompt_manager
 
 # 1. Créer le LLM
-llm = create_llm(
-    provider="openai",
-    model="gpt-4o-mini",
-    api_key="your-api-key"
-)
+llm = create_llm(provider="openai", model="gpt-4o-mini", api_key="your-api-key")
 
 # 2. Créer le moteur RAG
 engine = RAGEngine(
     retriever=your_retriever,  # De la tâche 3
     llm=llm,
     prompt_manager=create_default_prompt_manager(),
-    config=RAGConfig()
+    config=RAGConfig(),
 )
 
 # 3. Poser une question
@@ -97,16 +93,11 @@ from src.rag import CitationRAG, RAGQuery
 
 # Moteur avec citations forcées
 engine = CitationRAG(
-    retriever=your_retriever,
-    llm=llm,
-    prompt_manager=create_default_prompt_manager()
+    retriever=your_retriever, llm=llm, prompt_manager=create_default_prompt_manager()
 )
 
 # Question
-query = RAGQuery(
-    question="How does photosynthesis work?",
-    include_citations=True
-)
+query = RAGQuery(question="How does photosynthesis work?", include_citations=True)
 
 response = engine.query(query)
 
@@ -127,7 +118,7 @@ import yaml
 from src.rag import RAGConfig
 
 # Charger config
-with open('configs/rag/citations.yaml') as f:
+with open("configs/rag/citations.yaml") as f:
     config_dict = yaml.safe_load(f)
 
 config = RAGConfig.from_dict(config_dict)
@@ -176,11 +167,7 @@ response = engine.query(RAGQuery(question="..."))
 
 ### Secure RAG
 ```python
-config = RAGConfig(
-    prevent_hallucinations=True,
-    confidence_threshold=0.7,
-    min_relevance_score=0.7
-)
+config = RAGConfig(prevent_hallucinations=True, confidence_threshold=0.7, min_relevance_score=0.7)
 engine = RAGEngine(..., config=config)
 ```
 
@@ -224,7 +211,7 @@ Help the user using this context:
 {context}
 
 Always be {tone} and professional.""",
-    variables=["company_name", "context", "tone"]
+    variables=["company_name", "context", "tone"],
 )
 
 # 2. Enregistrer
@@ -233,10 +220,7 @@ manager.register_template(custom_prompt)
 
 # 3. Utiliser
 rendered = manager.render_template(
-    "custom_support",
-    company_name="Acme Corp",
-    context="...",
-    tone="friendly"
+    "custom_support", company_name="Acme Corp", context="...", tone="friendly"
 )
 ```
 
@@ -270,15 +254,15 @@ RAGResponse
 class RAGResponse:
     # Réponse
     answer: str
-    
+
     # Sources et citations
     sources: List[Source]
     citations: List[Citation]
-    
+
     # Confiance
     confidence: ConfidenceLevel  # HIGH, MEDIUM, LOW, UNCERTAIN
     based_on_context: bool
-    
+
     # Métadonnées
     model_used: str
     tokens_used: int
@@ -342,7 +326,7 @@ class RAGResponse:
        require_sources=True,  # Refuse sans sources
        prevent_hallucinations=True,
        confidence_threshold=0.7,
-       min_relevance_score=0.7
+       min_relevance_score=0.7,
    )
    ```
 
@@ -403,9 +387,7 @@ python examples/rag_examples.py
 ### Documentation Technique
 ```python
 config = RAGConfig(
-    system_prompt_template="technical_doc_system",
-    enable_citations=True,
-    default_temperature=0.5
+    system_prompt_template="technical_doc_system", enable_citations=True, default_temperature=0.5
 )
 ```
 
@@ -415,7 +397,7 @@ config = RAGConfig(
     system_prompt_template="medical_info_system",
     prevent_hallucinations=True,
     require_sources=True,
-    confidence_threshold=0.8
+    confidence_threshold=0.8,
 )
 ```
 
@@ -424,7 +406,7 @@ config = RAGConfig(
 config = RAGConfig(
     system_prompt_template="customer_support_system",
     enable_citations=False,  # Plus fluide
-    default_temperature=0.7
+    default_temperature=0.7,
 )
 ```
 
@@ -526,6 +508,6 @@ response = engine.query(RAGQuery(question="..."))
 
 ---
 
-**Version**: 1.0.0  
-**Date**: 2024  
+**Version**: 1.0.0
+**Date**: 2024
 **Status**: ✅ Production-ready

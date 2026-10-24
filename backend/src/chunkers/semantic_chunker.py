@@ -12,19 +12,18 @@ Avantage par rapport au sliding-window : les coupures coïncident avec les
 changements de sujet, ce qui améliore la précision du retrieval.
 """
 
-import re
 import logging
-from typing import List, Optional
+import re
 
 import numpy as np
 
 from src.core.interfaces import IChunker
-from src.core.models import Document, Chunk
+from src.core.models import Chunk, Document
 
 logger = logging.getLogger(__name__)
 
 
-def _cosine_similarity(a: List[float], b: List[float]) -> float:
+def _cosine_similarity(a: list[float], b: list[float]) -> float:
     """Similarité cosinus entre deux vecteurs numpy."""
     a_arr = np.array(a, dtype=np.float32)
     b_arr = np.array(b, dtype=np.float32)
@@ -35,13 +34,13 @@ def _cosine_similarity(a: List[float], b: List[float]) -> float:
     return float(np.dot(a_arr, b_arr) / (norm_a * norm_b))
 
 
-def _split_sentences(text: str) -> List[str]:
+def _split_sentences(text: str) -> list[str]:
     """
     Découpe un texte en phrases en utilisant la ponctuation (.!?) comme
     séparateurs, tout en gérant les abréviations courantes.
     """
     # Sépare sur . ! ? suivis d'un espace ou fin de chaîne
-    raw = re.split(r'(?<=[.!?])\s+', text.strip())
+    raw = re.split(r"(?<=[.!?])\s+", text.strip())
     # Filtre les fragments vides ou trop courts
     return [s.strip() for s in raw if len(s.strip()) > 10]
 
@@ -80,19 +79,22 @@ class SemanticChunker(IChunker):
         if self._model is None:
             try:
                 from sentence_transformers import SentenceTransformer
+
                 logger.info(f"Chargement du modèle SemanticChunker: {self.model_name}")
                 self._model = SentenceTransformer(self.model_name, device=self.device)
             except Exception as e:
-                logger.error(f"Impossible de charger le modèle d'embedding pour SemanticChunker: {e}")
+                logger.error(
+                    f"Impossible de charger le modèle d'embedding pour SemanticChunker: {e}"
+                )
                 raise
         return self._model
 
-    def _embed_sentences(self, sentences: List[str]) -> List[List[float]]:
+    def _embed_sentences(self, sentences: list[str]) -> list[list[float]]:
         model = self._get_model()
         embeddings = model.encode(sentences, show_progress_bar=False, convert_to_numpy=True)
         return embeddings.tolist()
 
-    def _find_breakpoints(self, embeddings: List[List[float]]) -> List[int]:
+    def _find_breakpoints(self, embeddings: list[list[float]]) -> list[int]:
         """
         Retourne les indices i tels que la similarité entre sentence[i] et
         sentence[i+1] est inférieure au seuil → point de coupure après i.
@@ -104,15 +106,13 @@ class SemanticChunker(IChunker):
                 breakpoints.append(i)
         return breakpoints
 
-    def _group_sentences(
-        self, sentences: List[str], breakpoints: List[int]
-    ) -> List[str]:
+    def _group_sentences(self, sentences: list[str], breakpoints: list[int]) -> list[str]:
         """
         Regroupe les phrases en chunks en respectant les points de coupure
         et les contraintes de taille (max_chunk_size / min_chunk_size).
         """
-        chunks: List[str] = []
-        current_sentences: List[str] = []
+        chunks: list[str] = []
+        current_sentences: list[str] = []
         current_size = 0
         bp_set = set(breakpoints)
 
@@ -139,7 +139,7 @@ class SemanticChunker(IChunker):
 
         return chunks
 
-    def chunk(self, documents: List[Document], **kwargs) -> List[Chunk]:
+    def chunk(self, documents: list[Document], **kwargs) -> list[Chunk]:
         """
         Découpe les documents en chunks sémantiques.
 
@@ -150,7 +150,7 @@ class SemanticChunker(IChunker):
         Returns:
             Liste de Chunk avec doc_id et metadata hérités du document parent.
         """
-        all_chunks: List[Chunk] = []
+        all_chunks: list[Chunk] = []
 
         for doc in documents:
             text = doc.content.strip()
@@ -164,7 +164,11 @@ class SemanticChunker(IChunker):
                     Chunk(
                         content=text,
                         doc_id=doc.doc_id,
-                        metadata={**doc.metadata, "chunk_size": len(text), "chunker": "semantic"},
+                        metadata={
+                            **doc.metadata,
+                            "chunk_size": len(text),
+                            "chunker": "semantic",
+                        },
                     )
                 )
                 continue
@@ -183,7 +187,7 @@ class SemanticChunker(IChunker):
                 grouped = []
                 start = 0
                 while start < len(text):
-                    grouped.append(text[start: start + size])
+                    grouped.append(text[start : start + size])
                     start += size - overlap
 
             for chunk_text in grouped:
@@ -201,7 +205,5 @@ class SemanticChunker(IChunker):
                     )
                 )
 
-        logger.info(
-            f"SemanticChunker: {len(documents)} documents → {len(all_chunks)} chunks"
-        )
+        logger.info(f"SemanticChunker: {len(documents)} documents → {len(all_chunks)} chunks")
         return all_chunks
