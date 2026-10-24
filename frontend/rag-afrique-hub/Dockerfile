@@ -6,11 +6,11 @@ RUN npm install
 
 # VITE_API_URL est bakée au build — elle doit correspondre à l'URL
 # que le navigateur utilisera pour atteindre le backend.
+# IMPORTANT : Ne JAMAIS passer de secrets (API_KEY, etc.) comme ARG/ENV
+# Vite : toute variable VITE_* se retrouve en clair dans le bundle JS public.
 ARG VITE_API_URL=http://localhost:8000
-ARG VITE_API_KEY=
 
 ENV VITE_API_URL=$VITE_API_URL
-ENV VITE_API_KEY=$VITE_API_KEY
 
 COPY . .
 RUN npm run build
