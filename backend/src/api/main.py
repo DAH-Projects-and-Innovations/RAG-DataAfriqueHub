@@ -1,3 +1,5 @@
+import os
+
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -16,10 +18,12 @@ app = FastAPI(
     dependencies=[Depends(verify_api_key)],
 )
 
-origins = [
-    "http://localhost",
-    "http://localhost:5173",
-]
+# Origines CORS autorisées.
+# En production, définir CORS_ORIGINS dans le .env :
+#   CORS_ORIGINS=https://mon-app.com,https://www.mon-app.com
+# En dev local, la valeur par défaut (localhost) est utilisée si la variable est absente.
+_raw_origins = os.getenv("CORS_ORIGINS", "http://localhost,http://localhost:5173")
+origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
