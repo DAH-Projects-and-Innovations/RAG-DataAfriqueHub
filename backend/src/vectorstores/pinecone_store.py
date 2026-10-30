@@ -155,14 +155,20 @@ class PineconeVectorStore(IVectorStore):
             self.namespace,
         )
 
-    def search(self, query_embedding: list[float], top_k: int = 5, **kwargs) -> list[Document]:
-        filter_dict: dict[str, Any] | None = kwargs.get("filter")
+    def search(
+        self,
+        query_embedding: list[float],
+        top_k: int = 5,
+        filters: dict[str, Any] | None = None,
+    ) -> list[Document]:
+        # Note : l'API Pinecone utilise `filter` (singulier) en interne ;
+        # notre interface IVectorStore utilise `filters` (pluriel) — on adapte ici.
         response = self.index.query(
             vector=query_embedding,
             top_k=top_k,
             include_metadata=True,
             namespace=self.namespace,
-            filter=filter_dict,
+            filter=filters,
         )
 
         docs: list[Document] = []

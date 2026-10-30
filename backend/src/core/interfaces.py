@@ -98,17 +98,24 @@ class IVectorStore(ABC):
         pass
 
     @abstractmethod
-    def search(self, query_embedding: list[float], top_k: int = 5, **kwargs) -> list[Chunk]:
+    def search(
+        self,
+        query_embedding: list[float],
+        top_k: int = 5,
+        filters: dict[str, Any] | None = None,
+    ) -> list[Document]:
         """
-        Recherche les chunks les plus similaires
+        Recherche les documents les plus similaires.
 
         Args:
             query_embedding: Vecteur de la requête
             top_k: Nombre de résultats à retourner
-            **kwargs: Paramètres de recherche (filtres, etc.)
+            filters: Filtres de métadonnées optionnels
+                     (ex: {"source": "rapport.pdf", "lang": "fr"}).
+                     ``None`` signifie aucun filtre — tous les documents sont candidats.
 
         Returns:
-            Liste de chunks ordonnés par similarité
+            Liste de documents ordonnés par similarité décroissante
         """
         pass
 

@@ -58,17 +58,35 @@ class FAISSVectorStore(IVectorStore):
         with open(self.map_path, "wb") as f:
             pickle.dump(self.chunks_map, f)
 
-    def search(self, query_embedding: list[float], top_k: int = 5, **kwargs) -> list[Chunk]:
+    def search(
+        self,
+        query_embedding: list[float],
+        top_k: int = 5,
+        filters: dict[str, Any] | None = None,
+    ) -> list[Chunk]:
         query_vec = np.array([query_embedding]).astype("float32")
         # Normalisation de la requête pour la similarité cosine
         faiss.normalize_L2(query_vec)
 
-        distances, indices = self.index.search(query_vec, top_k)
+        # Sur-échantillonnage : FAISS ne filtre pas nativement,
+        # on compense en cherchant plus de candidats avant le post-filtre.
+        fetch_k = top_k * 4 if filters else top_k
+        distances, indices = self.index.search(query_vec, min(fetch_k, self.index.ntotal or 1))
 
-        results = []
+        results: list[Chunk] = []
         for idx in indices[0]:
-            if idx != -1 and idx in self.chunks_map:  # -1 signifie aucun résultat trouvé
-                results.append(self.chunks_map[idx])
+            if idx == -1 or idx not in self.chunks_map:
+                continue  # -1 = aucun résultat FAISS
+            chunk = self.chunks_map[idx]
+            # Post-filtrage : on vérifie chaque condition du dict `filters`
+            if filters and not all(
+                chunk.metadata.get(k) == v for k, v in filters.items()
+            ):
+                continue
+            results.append(chunk)
+            if len(results) >= top_k:
+                break
+
         return results
 
     def delete(self, where: dict[str, Any]) -> None:
