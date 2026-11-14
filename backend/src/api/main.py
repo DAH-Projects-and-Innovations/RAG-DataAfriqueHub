@@ -1,6 +1,7 @@
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import os
 
 from src.api.dependencies import get_pipeline, verify_api_key
 from src.api.routes import ingest, query
@@ -50,7 +51,11 @@ app.include_router(models_router)
 
 @app.get("/health")
 def health(pipeline=Depends(get_pipeline)):
-    return {"status": "up", "stats": pipeline.get_stats()}
+    return {
+        "status": "up",
+        "config": os.getenv("RAG_CONFIG", "unknown"),
+        "stats": pipeline.get_stats(),
+    }
 
 
 if __name__ == "__main__":
