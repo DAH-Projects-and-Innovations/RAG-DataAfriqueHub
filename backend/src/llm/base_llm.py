@@ -199,12 +199,12 @@ class OpenAILLM(BaseLLM):
         """Génère une réponse via OpenAI."""
         self._initialize_client()
 
-        # Merger les kwargs avec la config
+        # Merger les kwargs avec la config — `or` assure le fallback même si model=None
         params = {
-            "model": kwargs.get("model", self.config.model),
-            "temperature": kwargs.get("temperature", self.config.temperature),
-            "max_tokens": kwargs.get("max_tokens", self.config.max_tokens),
-            "top_p": kwargs.get("top_p", self.config.top_p),
+            "model": kwargs.get("model") or self.config.model,
+            "temperature": kwargs.get("temperature") if kwargs.get("temperature") is not None else self.config.temperature,
+            "max_tokens": kwargs.get("max_tokens") if kwargs.get("max_tokens") is not None else self.config.max_tokens,
+            "top_p": kwargs.get("top_p") if kwargs.get("top_p") is not None else self.config.top_p,
             "frequency_penalty": kwargs.get("frequency_penalty", self.config.frequency_penalty),
             "presence_penalty": kwargs.get("presence_penalty", self.config.presence_penalty),
         }
@@ -260,12 +260,12 @@ class AnthropicLLM(BaseLLM):
             else:
                 conversation_messages.append(msg.to_dict())
 
-        # Paramètres
+        # Paramètres — `or` pour le fallback même si model=None est passé explicitement
         params = {
-            "model": kwargs.get("model", self.config.model),
-            "max_tokens": kwargs.get("max_tokens", self.config.max_tokens),
-            "temperature": kwargs.get("temperature", self.config.temperature),
-            "top_p": kwargs.get("top_p", self.config.top_p),
+            "model": kwargs.get("model") or self.config.model,
+            "max_tokens": kwargs.get("max_tokens") if kwargs.get("max_tokens") is not None else self.config.max_tokens,
+            "temperature": kwargs.get("temperature") if kwargs.get("temperature") is not None else self.config.temperature,
+            "top_p": kwargs.get("top_p") if kwargs.get("top_p") is not None else self.config.top_p,
         }
 
         if system_prompt:
@@ -310,14 +310,14 @@ class OllamaLLM(BaseLLM):
         # Convertir les messages
         messages_dict = [msg.to_dict() for msg in messages]
 
-        # Paramètres
+        # Paramètres — `or` pour le fallback même si model=None
         params = {
-            "model": kwargs.get("model", self.config.model),
+            "model": kwargs.get("model") or self.config.model,
             "messages": messages_dict,
             "options": {
-                "temperature": kwargs.get("temperature", self.config.temperature),
-                "num_predict": kwargs.get("max_tokens", self.config.max_tokens),
-                "top_p": kwargs.get("top_p", self.config.top_p),
+                "temperature": kwargs.get("temperature") if kwargs.get("temperature") is not None else self.config.temperature,
+                "num_predict": kwargs.get("max_tokens") if kwargs.get("max_tokens") is not None else self.config.max_tokens,
+                "top_p": kwargs.get("top_p") if kwargs.get("top_p") is not None else self.config.top_p,
             },
         }
 
@@ -387,14 +387,14 @@ class HuggingFaceLLM(BaseLLM):
         """Génère une réponse via l'API Inference HuggingFace ou en local."""
         self._initialize_client()
 
-        max_new_tokens = kwargs.get("max_tokens", self.config.max_tokens)
-        temperature = kwargs.get("temperature", self.config.temperature)
+        max_new_tokens = kwargs.get("max_tokens") if kwargs.get("max_tokens") is not None else self.config.max_tokens
+        temperature = kwargs.get("temperature") if kwargs.get("temperature") is not None else self.config.temperature
 
         if getattr(self, "_use_inference_api", False):
             # -- API Inference (chat_completion) --
             hf_messages = [{"role": m.role, "content": m.content} for m in messages]
             response = self._client.chat_completion(
-                model=self.config.model,
+                model=kwargs.get("model") or self.config.model,
                 messages=hf_messages,
                 max_tokens=max_new_tokens,
                 temperature=temperature,
@@ -494,8 +494,8 @@ class GeminiLLM(BaseLLM):
             elif msg.role == "assistant":
                 request_messages.append({"role": "model", "parts": [{"text": msg.content}]})
 
-        # Configuration pour API Gemini
-        model_name = kwargs.get("model", self.config.model)
+        # Configuration pour API Gemini — `or` pour le fallback même si model=None
+        model_name = kwargs.get("model") or self.config.model
 
         # Formater le nom du modèle correctement pour google-genai
         # Si le modèle ne commence pas par "models/", l'ajouter
@@ -555,12 +555,12 @@ class MistralLLM(BaseLLM):
         """Génère une réponse via Mistral AI."""
         self._initialize_client()
 
-        # Préparation des paramètres
+        # Préparation des paramètres — `or` pour le fallback même si model=None
         params = {
-            "model": kwargs.get("model", self.config.model),
-            "temperature": kwargs.get("temperature", self.config.temperature),
-            "max_tokens": kwargs.get("max_tokens", self.config.max_tokens),
-            "top_p": kwargs.get("top_p", self.config.top_p),
+            "model": kwargs.get("model") or self.config.model,
+            "temperature": kwargs.get("temperature") if kwargs.get("temperature") is not None else self.config.temperature,
+            "max_tokens": kwargs.get("max_tokens") if kwargs.get("max_tokens") is not None else self.config.max_tokens,
+            "top_p": kwargs.get("top_p") if kwargs.get("top_p") is not None else self.config.top_p,
         }
 
         # Conversion des messages au format attendu par Mistral
