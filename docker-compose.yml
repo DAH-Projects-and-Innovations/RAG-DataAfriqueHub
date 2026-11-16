@@ -39,8 +39,9 @@ services:
       args:
         # VITE_API_URL doit être l'URL que le NAVIGATEUR utilise pour atteindre le backend
         # En local : http://localhost:8000  |  En prod : https://api.votre-domaine.com
+        # SÉCURITÉ : Ne jamais passer API_KEY ici. Toute variable VITE_* est
+        # inscrite en clair dans le bundle JS public (lisible dans les DevTools).
         VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
-        VITE_API_KEY: ${API_KEY:-}
     ports:
       - "5173:80"
     depends_on:
