@@ -62,25 +62,67 @@ prompt_managers:
 #    num_ctx: 4096
 #    repeat_penalty: 1.1
 
+# --- Gemini Flash (gratuit, sans carte, très rapide) ---
+# Clé sur https://aistudio.google.com/apikey — nécessite GOOGLE_API_KEY dans le .env
 llm:
- name: "huggingface"
- params:
-   model: "HuggingFaceH4/zephyr-7b-beta"
-   api_key: "${HF_TOKEN}"
-   temperature: 0.7
-   max_tokens: 1000
-   top_p: 0.9
-   enable_citations: false
-   system_prompt_template: "rag_system"
-   user_prompt_template: "rag_user"
-   prevent_hallucinations: true
+  name: "gemini"
+  params:
+    api_key: "${GOOGLE_API_KEY}"
+    model: "gemini-3.8-flash"
+    temperature: 0.7
+    max_tokens: 1000
+    top_p: 0.9
+    enable_citations: false
+    system_prompt_template: "rag_system"
+    user_prompt_template: "rag_user"
+    prevent_hallucinations: true
+
+# --- Cerebras (commenter ci-dessus et décommenter) — nécessite carte bancaire ---
+# llm:
+#   name: "openai"
+#   params:
+#     api_key: "${CEREBRAS_API_KEY}"
+#     base_url: "https://api.cerebras.ai/v1"
+#     model: "gpt-oss-120b"
+#     temperature: 0.7
+#     max_tokens: 1000
+#     top_p: 0.9
+#     enable_citations: false
+#     system_prompt_template: "rag_system"
+#     user_prompt_template: "rag_user"
+#     prevent_hallucinations: true
+
+# --- HuggingFace (commenter ci-dessus et décommenter) ---
+# llm:
+#   name: "huggingface"
+#   params:
+#     model: "HuggingFaceH4/zephyr-7b-beta"
+#     api_key: "${HF_TOKEN}"
+#     temperature: 0.7
+#     max_tokens: 1000
+#     top_p: 0.9
+#     enable_citations: false
+#     system_prompt_template: "rag_system"
+#     user_prompt_template: "rag_user"
+#     prevent_hallucinations: true
 
 # Modèles disponibles — exposés via GET /models (utilisé par le frontend)
 models:
-  - id: "HuggingFaceH4/zephyr-7b-beta"
-    label: "Zephyr 7B (HuggingFace)"
-    provider: "huggingface"
+  - id: "gemini-3.8-flash"
+    label: "Gemini 3.8 Flash (Google)"
+    provider: "gemini"
     default: true
+  - id: "gemini-3.8-flash-lite"
+    label: "Gemini 3.8 Flash-Lite (Google)"
+    provider: "gemini"
+    default: false
+
+# --- Modèles Cerebras / HuggingFace (si autre llm activé) ---
+# models:
+#   - id: "gpt-oss-120b"
+#     label: "GPT-OSS 120B (Cerebras)"
+#     provider: "openai"
+#     default: true
 
 # Configuration du pipeline
 pipeline_config:
