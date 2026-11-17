@@ -63,7 +63,7 @@ llm:
 #   name: "gemini"
 #   params:
 #     api_key: "${GOOGLE_API_KEY}"
-#     model: "gemini-1.5-flash-8b"
+#     model: "gemini-3.8-flash"
 #     temperature: 0.7
 #     max_tokens: 1500
 #     top_p: 0.95
@@ -81,12 +81,12 @@ models:
 
 # --- Modèles Gemini (si llm: gemini activé) ---
 # models:
-#   - id: "gemini-2.0-flash"
-#     label: "Gemini 2.0 Flash (Google)"
+#   - id: "gemini-3.8-flash"
+#     label: "Gemini 3.8 Flash (Google)"
 #     provider: "gemini"
 #     default: true
-#   - id: "gemini-1.5-pro"
-#     label: "Gemini 1.5 Pro (Google)"
+#   - id: "gemini-3.8-flash-lite"
+#     label: "Gemini 3.8 Flash-Lite (Google)"
 #     provider: "gemini"
 #     default: false
 
