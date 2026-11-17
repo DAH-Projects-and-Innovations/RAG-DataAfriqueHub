@@ -159,13 +159,20 @@ class RAGPipeline:
             except Exception as e:
                 logger.error(f"Erreur lors de du retrieval pour '{query}': {e}")
 
-        # Dédoublonnage
-        seen_ids = set()
-        unique_docs = []
+        # Dédoublonnage par doc_id stable (fix #9)
+        # On n'utilise que les IDs non-None pour la déduplication : si doc_id est None
+        # (ne devrait pas arriver après le fix des vector stores, mais par sécurité),
+        # on conserve le document plutôt que de le supprimer à tort.
+        seen_ids: set[str] = set()
+        unique_docs: list[Document] = []
         for doc in all_documents:
-            if doc.doc_id not in seen_ids:
+            if doc.doc_id is None:
+                # Pas d'ID stable → on garde le doc (cas de fallback)
+                unique_docs.append(doc)
+            elif doc.doc_id not in seen_ids:
                 seen_ids.add(doc.doc_id)
                 unique_docs.append(doc)
+            # else : doublon avec ID stable → ignoré
 
         logger.info(f"{len(unique_docs)} documents uniques récupérés")
         metadata["steps"].append({"step": "retrieval", "num_docs": len(unique_docs)})
