@@ -38,8 +38,21 @@ class ChromaVectorStore(IVectorStore):
             documents=[c.content for c in chunks],
         )
 
-    def search(self, query_embedding: list[float], top_k: int = 5, **kwargs) -> list[Document]:
-        results = self.collection.query(query_embeddings=[query_embedding], n_results=top_k)
+    def search(
+        self,
+        query_embedding: list[float],
+        top_k: int = 5,
+        filters: dict[str, Any] | None = None,
+    ) -> list[Document]:
+        query_kwargs: dict[str, Any] = {
+            "query_embeddings": [query_embedding],
+            "n_results": top_k,
+        }
+        # Chroma accepte nativement un dict de filtres via le paramètre `where`
+        if filters:
+            query_kwargs["where"] = filters
+
+        results = self.collection.query(**query_kwargs)
 
         # Reconstruction des objets Document à partir des résultats
         docs: list[Document] = []
