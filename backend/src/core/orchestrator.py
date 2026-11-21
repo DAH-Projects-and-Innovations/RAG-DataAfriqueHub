@@ -147,25 +147,32 @@ class RAGPipeline:
             try:
                 query_obj = Query(text=query)
                 query_obj.embedding = self.embedder.embed_query(query)
-            except Exception as e:
-                logger.error(f"Erreur lors de l'embedding pour '{query}': {e}")
-
-            try:
-                # 3. Retrieval
+                # 3. Retrieval — dans le même bloc pour éviter qu'un échec
+                # d'embedding ne laisse tomber le retrieval sur un objet non embeddé
                 docs = self.retriever.retrieve(
                     query_obj, top_k=top_k, **kwargs.get("retriever_params", {})
                 )
                 all_documents.extend(docs)
             except Exception as e:
-                logger.error(f"Erreur lors de du retrieval pour '{query}': {e}")
+                logger.error(
+                    f"Erreur lors de l'embedding ou du retrieval pour '{query}': {e} — variante ignorée"
+                )
+                continue
 
-        # Dédoublonnage
-        seen_ids = set()
-        unique_docs = []
+        # Dédoublonnage par doc_id stable (fix #9)
+        # On n'utilise que les IDs non-None pour la déduplication : si doc_id est None
+        # (ne devrait pas arriver après le fix des vector stores, mais par sécurité),
+        # on conserve le document plutôt que de le supprimer à tort.
+        seen_ids: set[str] = set()
+        unique_docs: list[Document] = []
         for doc in all_documents:
-            if doc.doc_id not in seen_ids:
+            if doc.doc_id is None:
+                # Pas d'ID stable → on garde le doc (cas de fallback)
+                unique_docs.append(doc)
+            elif doc.doc_id not in seen_ids:
                 seen_ids.add(doc.doc_id)
                 unique_docs.append(doc)
+            # else : doublon avec ID stable → ignoré
 
         logger.info(f"{len(unique_docs)} documents uniques récupérés")
         metadata["steps"].append({"step": "retrieval", "num_docs": len(unique_docs)})

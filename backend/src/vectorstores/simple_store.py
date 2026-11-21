@@ -108,29 +108,33 @@ class FAISSVectorStore(IVectorStore):
         self._persist()
         logger.debug("Ajout de %d chunks (IDs %d–%d)", len(chunks), ids[0], ids[-1])
 
-    def search(self, query_embedding: list[float], top_k: int = 5, **kwargs) -> list[Chunk]:
-        if self.index.ntotal == 0:
-            return []
+    def search(
+        self,
+        query_embedding: list[float],
+        top_k: int = 5,
+        filters: dict[str, Any] | None = None,
+    ) -> list[Chunk]:
+        query_vec = np.array([query_embedding]).astype("float32")
+        # Normalisation de la requête pour la similarité cosine
+        faiss.normalize_L2(query_vec)
 
-        # Chercher plus de candidats que top_k pour compenser d'éventuels
-        # fantômes résiduels (ne devrait plus arriver avec IndexIDMap + remove_ids,
-        # mais reste une garde-fou défensive).
-        n_probe = min(top_k, self.index.ntotal)
+        # Sur-échantillonnage : FAISS ne filtre pas nativement,
+        # on compense en cherchant plus de candidats avant le post-filtre.
+        fetch_k = top_k * 4 if filters else top_k
+        distances, indices = self.index.search(query_vec, min(fetch_k, self.index.ntotal or 1))
 
-        query_vec = np.array([query_embedding], dtype="float32")
-        if self.distance_metric == "cosine":
-            faiss.normalize_L2(query_vec)
-
-        _distances, indices = self.index.search(query_vec, n_probe)
-
-        results = []
+        results: list[Chunk] = []
         for idx in indices[0]:
-            if idx == -1:
+            if idx == -1 or idx not in self.chunks_map:
+                continue  # -1 = aucun résultat FAISS
+            chunk = self.chunks_map[idx]
+            # Post-filtrage : on vérifie chaque condition du dict `filters`
+            if filters and not all(
+                chunk.metadata.get(k) == v for k, v in filters.items()
+            ):
                 continue
-            chunk = self.chunks_map.get(int(idx))
-            if chunk is not None:
-                results.append(chunk)
-            if len(results) == top_k:
+            results.append(chunk)
+            if len(results) >= top_k:
                 break
 
         return results

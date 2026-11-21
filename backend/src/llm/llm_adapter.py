@@ -76,11 +76,18 @@ class LLMAdapter(ILLM):
         reraise=True,
     )
     def _call_llm(self, messages: list[LLMMessage], **kwargs):
-        """Appelle le LLM avec retry exponentiel sur les erreurs transitoires (429, 503…)."""
+        """Appelle le LLM avec retry exponentiel sur les erreurs transitoires (429, 503…).
+
+        Tous les kwargs pertinents (model, temperature, max_tokens, top_p…) sont
+        transmis au provider sous-jacent, qui les applique en override de sa config
+        de démarrage. Cela permet au frontend de choisir le modèle via llm_params.model.
+        """
         return self.llm.generate(
             messages=messages,
+            model=kwargs.get("model"),
             temperature=kwargs.get("temperature", self.config.default_temperature),
             max_tokens=kwargs.get("max_tokens", self.config.default_max_tokens),
+            top_p=kwargs.get("top_p"),
         )
 
     def generate(self, prompt: str, **kwargs) -> str:
