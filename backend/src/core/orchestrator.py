@@ -147,17 +147,17 @@ class RAGPipeline:
             try:
                 query_obj = Query(text=query)
                 query_obj.embedding = self.embedder.embed_query(query)
-            except Exception as e:
-                logger.error(f"Erreur lors de l'embedding pour '{query}': {e}")
-
-            try:
-                # 3. Retrieval
+                # 3. Retrieval — dans le même bloc pour éviter qu'un échec
+                # d'embedding ne laisse tomber le retrieval sur un objet non embeddé
                 docs = self.retriever.retrieve(
                     query_obj, top_k=top_k, **kwargs.get("retriever_params", {})
                 )
                 all_documents.extend(docs)
             except Exception as e:
-                logger.error(f"Erreur lors de du retrieval pour '{query}': {e}")
+                logger.error(
+                    f"Erreur lors de l'embedding ou du retrieval pour '{query}': {e} — variante ignorée"
+                )
+                continue
 
         # Dédoublonnage par doc_id stable (fix #9)
         # On n'utilise que les IDs non-None pour la déduplication : si doc_id est None
